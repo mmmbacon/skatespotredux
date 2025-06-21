@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import auth
+from .database import Base, engine
 
 app = FastAPI(title="SkateSpot API", version="0.1.0")
 
@@ -16,6 +17,14 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+
+# --- database startup -------------------------------------------------------
+
+@app.on_event("startup")
+async def on_startup() -> None:
+    """Create database tables on application startup if they don't exist."""
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 @app.get("/health")
 async def health():

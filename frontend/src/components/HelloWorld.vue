@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
+import { useAuth } from '../composables/useAuth';
 
 defineProps<{ msg: string }>();
 
 const count = ref(0);
 const status = ref<string>('checking...');
+
+const { user, login, logout } = useAuth();
 
 onMounted(async () => {
   try {
@@ -45,6 +48,19 @@ onMounted(async () => {
   </p>
   <p class="read-the-docs">Click on the Vite and Vue logos to learn more</p>
   <p>Backend status: {{ status }}</p>
+
+  <div v-if="user">
+    <img
+      :src="user.picture"
+      alt="avatar"
+      style="width: 40px; border-radius: 50%"
+    />
+    <span>{{ user.name || user.email }}</span>
+    <button @click="logout">Logout</button>
+  </div>
+  <div v-else>
+    <button @click="login">Login with Google</button>
+  </div>
 </template>
 
 <style scoped>
