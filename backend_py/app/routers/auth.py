@@ -21,8 +21,8 @@ oauth = OAuth()
 
 oauth.register(
     name="google",
-    client_id=settings.google_client_id,
-    client_secret=settings.google_client_secret,
+    client_id=settings.GOOGLE_CLIENT_ID,
+    client_secret=settings.GOOGLE_CLIENT_SECRET,
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_kwargs={"scope": "openid email profile"},
 )
@@ -75,7 +75,7 @@ async def google_callback(
         "email": user.email,
         "exp": datetime.utcnow() + timedelta(hours=12),
     }
-    app_jwt = jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
+    app_jwt = jwt.encode(payload, settings.JWT_SECRET, algorithm="HS256")
 
     frontend_redirect_url = "http://localhost:5173/auth/success?token=" + app_jwt
 
@@ -98,7 +98,7 @@ async def get_current_user(
 ):
     """Validate JWT from Authorization header and return the corresponding user."""
     try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
         user_id = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")

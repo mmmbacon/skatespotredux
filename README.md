@@ -33,3 +33,16 @@ cd infra && docker compose up --build
 The application will be available at `http://localhost:5173`.
 
 The backend health-check is at `http://localhost:3000/health`.
+
+## Development
+
+All `docker compose` commands should be run from the `infra/` directory.
+
+- **Build all services:** `docker compose build`
+- **Build a specific service:** `docker compose build <service_name>` (e.g., `backend`)
+- **Start all services:** `docker compose up`
+- **Stop and remove all services:** `docker compose down`
+- **View logs for all services:** `docker compose logs -f`
+- **View logs for a specific service:** `docker compose logs -f <service_name>`
+- **Run a one-off command in a service:** `docker compose run --rm <service_name> <command>` (e.g., `docker compose run --rm backend pytest`)
+- **Open a shell inside a running service:** `docker compose exec <service_name> /bin/sh`
