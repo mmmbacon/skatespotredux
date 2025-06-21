@@ -1,0 +1,34 @@
+name: skatespot
+version: "3.9"
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    env_file:
+      - ./env/.env.local
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    container_name: skatespot-postgres
+
+  backend:
+    build: ../backend_py
+    depends_on:
+      - postgres
+    env_file:
+      - ./env/.env.local
+    ports:
+      - "3000:3000"
+    container_name: skatespot-backend
+
+  frontend:
+    build: ../frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+    container_name: skatespot-frontend
+
+volumes:
+  pgdata: 
