@@ -92,5 +92,7 @@ html {
 
 main {
   flex-grow: 1;
+  position: relative;
+  min-height: 0;
 }
 </style>
