@@ -1,17 +1,19 @@
 from functools import lru_cache
-from pydantic import BaseSettings, AnyUrl, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    google_client_id: str = Field(..., env="GOOGLE_CLIENT_ID")
-    google_client_secret: str = Field(..., env="GOOGLE_CLIENT_SECRET")
-    jwt_secret: str = Field(..., env="JWT_SECRET")
+    DATABASE_URL: str = Field(..., env="DATABASE_URL")
+    GOOGLE_CLIENT_ID: str = Field(..., env="GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET: str = Field(..., env="GOOGLE_CLIENT_SECRET")
+    JWT_SECRET: str = Field(..., env="JWT_SECRET")
 
     class Config:
         env_file = ".env"
-        env_file_encoding = "utf-8"
+        extra = "ignore"
 
 
-@lru_cache
+@lru_cache()
 def get_settings() -> Settings:
     return Settings() 
