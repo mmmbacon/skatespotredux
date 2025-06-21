@@ -7,7 +7,7 @@ A full-stack skate spot locator web application.
 ```
 /               # pnpm workspace root
   frontend/     # Vue 3 + Vite + Pinia
-  backend/      # NestJS API
+  backend_py/   # FastAPI API
   infra/        # Docker Compose & env files
 ```
 
@@ -16,15 +16,20 @@ A full-stack skate spot locator web application.
 Prerequisites: Node 20+, pnpm, Docker.
 
 ```bash
-# 1. Install dependencies
-pnpm install -r
+# 1. Configure Environment
+# Copy the sample environment file.
+cp infra/sample.env infra/env/.env.local
 
-# 2. Run services without Docker (two terminals)
-cd backend && pnpm run start:dev       # http://localhost:3000/health
-cd frontend && pnpm run dev -- --host  # http://localhost:5173
+# Now, open infra/env/.env.local and replace the placeholder values
+# for GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET with your credentials.
 
-# 3. Or spin up everything with Docker
+# 2. Install dependencies
+pnpm install
+
+# 3. Spin up everything with Docker
 cd infra && docker compose up --build
 ```
 
-The frontend Home page should display the API health status returned from `GET /health`.
+The application will be available at `http://localhost:5173`.
+
+The backend health-check is at `http://localhost:3000/health`.
