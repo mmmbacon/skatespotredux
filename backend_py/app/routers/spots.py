@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from uuid import UUID
@@ -51,4 +51,63 @@ async def get_spots(db: AsyncSession = Depends(get_db), skip: int = 0, limit: in
 
     result = await db.execute(select(Spot).offset(skip).limit(limit))
     spots = result.scalars().all()
-    return spots 
+    return spots
+
+
+@router.put("/{spot_id}", response_model=schemas.Spot)
+async def update_spot(
+    spot_id: UUID,
+    spot_update: schemas.SpotUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Update a skate spot.
+    """
+    db_spot = await db.get(Spot, spot_id)
+
+    if not db_spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+
+    if db_spot.user_id != current_user.id:
+        raise HTTPException(
+            status_code=403, detail="Not authorized to update this spot"
+        )
+
+    update_data = spot_update.model_dump(exclude_unset=True)
+
+    for key, value in update_data.items():
+        if key == "location" and value:
+            point = value["coordinates"]
+            wkt_location = f"POINT({point[0]} {point[1]})"
+            setattr(db_spot, key, wkt_location)
+        else:
+            setattr(db_spot, key, value)
+
+    await db.commit()
+    await db.refresh(db_spot)
+    return db_spot
+
+
+@router.delete("/{spot_id}", status_code=204)
+async def delete_spot(
+    spot_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Delete a skate spot.
+    """
+    db_spot = await db.get(Spot, spot_id)
+
+    if not db_spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+
+    if db_spot.user_id != current_user.id:
+        raise HTTPException(
+            status_code=403, detail="Not authorized to delete this spot"
+        )
+
+    await db.delete(db_spot)
+    await db.commit()
+    return Response(status_code=204) 

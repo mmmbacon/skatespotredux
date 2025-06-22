@@ -1,1 +1,1 @@
-from .spot import Spot, SpotCreate 
+from .spot import Spot, SpotCreate, SpotUpdate, SpotBase 

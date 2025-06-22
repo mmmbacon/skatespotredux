@@ -17,6 +17,12 @@ class SpotCreate(SpotBase):
     # e.g. {"type": "Point", "coordinates": [-73.97, 40.77]}
     location: dict
 
+# Schema for updating a spot
+class SpotUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    location: Optional[dict] = None
+
 # Schema for reading a spot from the database
 class Spot(SpotBase):
     id: UUID
@@ -27,6 +33,8 @@ class Spot(SpotBase):
 
     @validator("location", pre=True, always=True)
     def validate_location(cls, v):
+        if isinstance(v, dict):
+            return v
         if isinstance(v, WKBElement):
             # Parse the WKBElement to a Shapely geometry object
             geom = wkb_loads(v.data)

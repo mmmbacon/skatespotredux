@@ -1,13 +1,27 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useSpotsStore } from '@/stores/spots';
+import { useAuthStore } from '@/stores/auth';
+import BaseButton from './BaseButton.vue';
 
 const spotsStore = useSpotsStore();
+const authStore = useAuthStore();
 
 onMounted(() => {
   // The fetch is already called in App.vue, so this is redundant
   // spotsStore.fetchSpots();
 });
+
+const handleDelete = async (spotId: string) => {
+  if (confirm('Are you sure you want to delete this spot?')) {
+    await spotsStore.deleteSpot(spotId);
+  }
+};
+
+const handleEdit = (spotId: string) => {
+  // TODO: Implement edit functionality
+  console.log('Edit spot:', spotId);
+};
 </script>
 
 <template>
@@ -30,6 +44,21 @@ onMounted(() => {
       >
         <h2 class="text-xl font-semibold text-gray-900">{{ spot.name }}</h2>
         <p class="text-gray-700">{{ spot.description }}</p>
+        <div
+          v-if="authStore.user && authStore.user.id === spot.user_id"
+          class="mt-4 flex space-x-2"
+        >
+          <BaseButton
+            @click="handleEdit(spot.id)"
+            variant="secondary"
+            size="sm"
+          >
+            Edit
+          </BaseButton>
+          <BaseButton @click="handleDelete(spot.id)" variant="danger" size="sm">
+            Delete
+          </BaseButton>
+        </div>
       </li>
     </ul>
   </div>
