@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Map from './components/Map.vue';
 import { useAuth } from './composables/useAuth';
+import BaseButton from './components/BaseButton.vue';
 
 const { user, login, logout } = useAuth();
 </script>
@@ -13,10 +14,10 @@ const { user, login, logout } = useAuth();
         <div v-if="user">
           <img :src="user.picture" alt="avatar" class="avatar" />
           <span>{{ user.name || user.email }}</span>
-          <button @click="logout" class="auth-button">Logout</button>
+          <BaseButton @click="logout">Logout</BaseButton>
         </div>
         <div v-else>
-          <button @click="login" class="auth-button">Login with Google</button>
+          <BaseButton @click="login">Login with Google</BaseButton>
         </div>
       </div>
     </header>
@@ -78,16 +79,7 @@ html {
 }
 
 .auth-button {
-  border: 1px solid #ccc;
-  background-color: #f8f8f8;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.auth-button:hover {
-  background-color: #f0f0f0;
+  /* removed */
 }
 
 main {
