@@ -9,6 +9,8 @@ import BaseButton from './components/BaseButton.vue';
 const authStore = useAuthStore();
 const spotsStore = useSpotsStore();
 const mapRef = ref<InstanceType<typeof Map> | null>(null);
+const editedLocation = ref<[number, number] | null>(null);
+const isCreatingSpot = ref(false);
 
 const handleFocusSpot = (coordinates: [number, number]) => {
   if (mapRef.value) {
@@ -23,6 +25,22 @@ const handleBoundsChanged = (bounds: {
   west: number;
 }) => {
   spotsStore.fetchSpots(bounds);
+};
+
+const handleLocationToEdit = (location: [number, number] | null) => {
+  editedLocation.value = location;
+};
+
+const handleLocationUpdated = (location: [number, number]) => {
+  editedLocation.value = location;
+};
+
+const handleStartCreating = () => {
+  isCreatingSpot.value = true;
+};
+
+const handleCreateFinished = () => {
+  isCreatingSpot.value = false;
 };
 </script>
 
@@ -42,13 +60,22 @@ const handleBoundsChanged = (bounds: {
     </header>
     <div class="flex flex-grow overflow-hidden">
       <aside class="w-80 bg-gray-100 p-4 overflow-y-auto flex-shrink-0">
-        <SpotList @focus-spot="handleFocusSpot" />
+        <SpotList
+          @focus-spot="handleFocusSpot"
+          @location-to-edit="handleLocationToEdit"
+          :edited-location="editedLocation"
+          @start-creating="handleStartCreating"
+        />
       </aside>
       <main class="flex-grow relative">
         <Map
           ref="mapRef"
           :spots="spotsStore.spots"
           @bounds-changed="handleBoundsChanged"
+          :location-to-edit="editedLocation"
+          @location-updated="handleLocationUpdated"
+          :is-creating="isCreatingSpot"
+          @create-finished="handleCreateFinished"
         />
       </main>
     </div>

@@ -10,23 +10,25 @@
   },
   "dependencies": {
     "@vue-leaflet/vue-leaflet": "^0.10.1",
-    "axios": "^1.10.0",
+    "axios": "^1.7.2",
     "leaflet": "^1.9.4",
-    "pinia": "^3.0.3",
-    "vue": "^3.5.13"
+    "pinia": "^2.1.7",
+    "vue": "^3.4.21",
+    "vue-toastification": "2.0.0-rc.5"
   },
   "devDependencies": {
-    "@types/leaflet": "^1.9.18",
+    "@types/leaflet": "^1.9.12",
+    "@types/node": "^24.0.3",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/tsconfig": "^0.7.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "shadcn-vue": "^2.2.0",
+    "tailwindcss": "^3.4.4",
+    "tailwindcss-animate": "^1.0.0",
     "typescript": "~5.8.3",
     "vite": "^6.3.5",
-    "vue-tsc": "^2.2.8",
-    "tailwindcss": "^3.4.4",
-    "postcss": "^8.4.38",
-    "autoprefixer": "^10.4.19",
-    "shadcn-vue": "^2.2.0",
-    "tailwindcss-animate": "^1.0.0"
+    "vue-tsc": "^2.2.8"
   },
   "packageManager": "pnpm@10.12.1+sha512.f0dda8580f0ee9481c5c79a1d927b9164f2c478e90992ad268bbb2465a736984391d6333d2c327913578b2804af33474ca554ba29c04a8b13060a717675ae3ac"
 }

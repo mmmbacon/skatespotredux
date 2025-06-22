@@ -1,20 +1,96 @@
 <script setup lang="ts">
-import { onMounted, defineEmits } from 'vue';
-import { useSpotsStore, Spot } from '@/stores/spots';
+import { onMounted, defineEmits, ref, watch } from 'vue';
+import { useSpotsStore } from '@/stores/spots';
+import type { Spot } from '@/stores/spots';
 import { useAuthStore } from '@/stores/auth';
 import BaseButton from './BaseButton.vue';
+import SpotForm from './SpotForm.vue';
 
 const spotsStore = useSpotsStore();
 const authStore = useAuthStore();
-const emit = defineEmits(['focus-spot']);
+const emit = defineEmits([
+  'focus-spot',
+  'location-to-edit',
+  'location-updated',
+  'start-creating',
+]);
+
+const props = defineProps({
+  editedLocation: {
+    type: Object as () => [number, number] | null,
+    default: null,
+  },
+});
+
+const isFormVisible = ref(false);
+const editingSpot = ref<Spot | null>(null);
+const formLocation = ref<[number, number] | null>(null);
 
 onMounted(() => {
   // The fetch is already called in App.vue, so this is redundant
   // spotsStore.fetchSpots();
 });
 
+watch(
+  () => props.editedLocation,
+  (newLocation) => {
+    formLocation.value = newLocation;
+  }
+);
+
+watch(isFormVisible, (isVisible) => {
+  if (!isVisible) {
+    emit('location-to-edit', null);
+  }
+});
+
 const handleSpotClick = (spot: Spot) => {
   emit('focus-spot', spot.location.coordinates.slice().reverse());
+};
+
+const showCreateForm = () => {
+  editingSpot.value = null;
+  // For creating, we'll need to get the current map center
+  // This is a bit tricky, so for now let's use a default
+  // and let the user drag the marker.
+  const initialLocation: [number, number] = [51.05, -114.09]; // Default to Calgary
+  formLocation.value = initialLocation;
+  emit('location-to-edit', initialLocation);
+  isFormVisible.value = true;
+};
+
+const showEditForm = (spot: Spot) => {
+  editingSpot.value = spot;
+  const spotLocation: [number, number] = spot.location.coordinates
+    .slice()
+    .reverse() as [number, number];
+  formLocation.value = spotLocation;
+  emit('location-to-edit', spotLocation);
+  isFormVisible.value = true;
+};
+
+const closeForm = () => {
+  isFormVisible.value = false;
+  editingSpot.value = null;
+  formLocation.value = null;
+  emit('location-to-edit', null);
+};
+
+const handleSave = async (formData: any) => {
+  if (!editingSpot.value) return;
+
+  const payload = {
+    ...formData,
+    location: {
+      type: 'Point',
+      coordinates: formLocation.value
+        ? [formLocation.value[1], formLocation.value[0]]
+        : [0, 0], // Lng, Lat
+    },
+  };
+
+  await spotsStore.updateSpot(editingSpot.value.id, payload);
+  closeForm();
 };
 
 const handleDelete = async (spotId: string) => {
@@ -22,16 +98,19 @@ const handleDelete = async (spotId: string) => {
     await spotsStore.deleteSpot(spotId);
   }
 };
-
-const handleEdit = (spotId: string) => {
-  // TODO: Implement edit functionality
-  console.log('Edit spot:', spotId);
-};
 </script>
 
 <template>
   <div>
-    <h1 class="text-2xl font-bold mb-4 text-gray-800">Skate Spots</h1>
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold text-gray-800">Skate Spots</h1>
+      <BaseButton
+        @click="$emit('start-creating')"
+        v-if="authStore.isAuthenticated"
+      >
+        Add Spot
+      </BaseButton>
+    </div>
     <div class="mb-4">
       <input
         type="text"
@@ -56,24 +135,38 @@ const handleEdit = (spotId: string) => {
         class="p-4 bg-white border rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
         @click="handleSpotClick(spot)"
       >
-        <h2 class="text-xl font-semibold text-gray-900">{{ spot.name }}</h2>
-        <p class="text-gray-700">{{ spot.description }}</p>
-        <div
-          v-if="authStore.user && authStore.user.id === spot.user_id"
-          class="mt-4 flex space-x-2"
-        >
-          <BaseButton
-            @click="handleEdit(spot.id)"
-            variant="secondary"
-            size="sm"
+        <div class="flex justify-between items-start">
+          <div>
+            <h2 class="text-xl font-semibold text-gray-900">{{ spot.name }}</h2>
+            <p class="text-gray-700">{{ spot.description }}</p>
+          </div>
+          <div
+            v-if="authStore.user && authStore.user.id === spot.user_id"
+            class="flex space-x-2 flex-shrink-0 ml-4"
           >
-            Edit
-          </BaseButton>
-          <BaseButton @click="handleDelete(spot.id)" variant="danger" size="sm">
-            Delete
-          </BaseButton>
+            <BaseButton
+              @click.stop="showEditForm(spot)"
+              variant="secondary"
+              size="sm"
+            >
+              Edit
+            </BaseButton>
+            <BaseButton
+              @click.stop="handleDelete(spot.id)"
+              variant="danger"
+              size="sm"
+            >
+              Delete
+            </BaseButton>
+          </div>
         </div>
       </li>
     </ul>
+    <SpotForm
+      :is-visible="isFormVisible"
+      :spot="editingSpot"
+      @close="closeForm"
+      @save="handleSave"
+    />
   </div>
 </template>

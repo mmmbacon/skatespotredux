@@ -39,11 +39,10 @@ services:
 
   frontend:
     build:
-      context: ../frontend
-      target: builder
+      context: ..
+      dockerfile: frontend/Dockerfile
     volumes:
-      - ../frontend:/app
-      - /app/node_modules
+      - ../frontend:/app/frontend
     depends_on:
       - backend
     ports:

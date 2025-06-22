@@ -18,11 +18,48 @@
         <l-marker
           v-for="spot in spots"
           :key="spot.id"
-          :lat-lng="spot.location.coordinates.slice().reverse()"
+          :lat-lng="
+            [spot.location.coordinates[1], spot.location.coordinates[0]] as [
+              number,
+              number,
+            ]
+          "
         >
           <l-popup>
             <b>{{ spot.name }}</b
             ><br />{{ spot.description }}
+          </l-popup>
+        </l-marker>
+        <!-- Draggable marker for editing -->
+        <l-marker
+          v-if="editableLocation"
+          :lat-lng="editableLocation"
+          :draggable="true"
+          @dragend="handleMarkerDrag"
+        >
+        </l-marker>
+
+        <!-- Marker for creating a new spot -->
+        <l-marker
+          v-if="isCreating && newSpotLocation"
+          ref="newMarkerRef"
+          :lat-lng="newSpotLocation"
+          :draggable="true"
+          @dragend="handleNewMarkerDrag"
+          :icon="redIcon"
+        >
+          <l-popup :close-on-click="false" :close-button="false">
+            <div class="w-48">
+              <h3 class="font-bold mb-2">Create New Spot</h3>
+              <input
+                v-model="newSpotName"
+                placeholder="Spot Name"
+                class="w-full px-2 py-1 border rounded-md mb-2"
+              />
+              <BaseButton @click="handleCreateSpot" size="sm" variant="default"
+                >Save</BaseButton
+              >
+            </div>
           </l-popup>
         </l-marker>
       </l-map>
@@ -35,15 +72,26 @@ import {
   ref,
   onMounted,
   defineProps,
-  PropType,
   defineExpose,
   defineEmits,
   watch,
+  nextTick,
 } from 'vue';
+import {
+  LMap,
+  LTileLayer,
+  LMarker,
+  LIcon,
+  LPopup,
+} from '@vue-leaflet/vue-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
+import type { PropType } from 'vue';
+import type { Spot } from '@/stores/spots';
+import { useSpotsStore } from '@/stores/spots';
+import type { SpotCreatePayload } from '@/stores/spots';
+import BaseButton from './BaseButton.vue';
+import { useToast } from 'vue-toastification';
 import L from 'leaflet';
-import type { Spot } from '@/stores/spots'; // Import the Spot interface
 
 // This is a common fix for icon path issues with bundlers
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
@@ -56,6 +104,20 @@ L.Icon.Default.mergeOptions({
   shadowUrl: shadowUrl,
 });
 
+const redIcon = new L.Icon({
+  iconUrl:
+    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+const spotsStore = useSpotsStore();
+const toast = useToast();
+
 // Define props
 const props = defineProps({
   spots: {
@@ -63,14 +125,87 @@ const props = defineProps({
     required: true,
     default: () => [],
   },
+  locationToEdit: {
+    type: Object as PropType<[number, number] | null>,
+    default: null,
+  },
+  isCreating: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-const emit = defineEmits(['bounds-changed']);
+const emit = defineEmits([
+  'bounds-changed',
+  'location-updated',
+  'create-finished',
+]);
+const editableLocation = ref<[number, number] | null>(null);
+
+watch(
+  () => props.locationToEdit,
+  (newVal) => {
+    editableLocation.value = newVal;
+  }
+);
+
+const handleMarkerDrag = (e: any) => {
+  const latlng = e.target.getLatLng();
+  editableLocation.value = [latlng.lat, latlng.lng];
+  emit('location-updated', editableLocation.value);
+};
 
 const zoom = ref(12);
 const isMounted = ref(false);
-const center = ref<[number, number]>([40.7128, -74.006]); // Default center
+const center = ref<[number, number]>([51.0447, -114.0719]); // Calgary
 const mapRef = ref(null);
+
+const newSpotName = ref('');
+const newSpotLocation = ref<[number, number] | null>(null);
+const newMarkerRef = ref(null);
+
+watch(
+  () => props.isCreating,
+  (creating) => {
+    if (creating) {
+      const map = (mapRef.value as any)?.leafletObject;
+      if (map) {
+        const center = map.getCenter();
+        newSpotLocation.value = [center.lat, center.lng];
+        nextTick(() => {
+          (newMarkerRef.value as any)?.leafletObject.openPopup();
+        });
+      }
+    } else {
+      newSpotLocation.value = null;
+      newSpotName.value = '';
+    }
+  }
+);
+
+const handleNewMarkerDrag = (e: any) => {
+  const latlng = e.target.getLatLng();
+  newSpotLocation.value = [latlng.lat, latlng.lng];
+  nextTick(() => {
+    (newMarkerRef.value as any)?.leafletObject.openPopup();
+  });
+};
+
+const handleCreateSpot = async () => {
+  if (newSpotName.value && newSpotLocation.value) {
+    const payload: SpotCreatePayload = {
+      name: newSpotName.value,
+      description: '', // Description can be added via edit
+      location: {
+        type: 'Point',
+        coordinates: [newSpotLocation.value[1], newSpotLocation.value[0]], // Lng, Lat
+      },
+    };
+    await spotsStore.addSpot(payload);
+    emit('create-finished');
+    toast.success('Spot created successfully!');
+  }
+};
 
 onMounted(() => {
   // By setting this flag in onMounted, we ensure the map component
