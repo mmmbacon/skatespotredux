@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, defineEmits } from 'vue';
+import { onMounted, defineEmits, ref, computed } from 'vue';
 import { useSpotsStore } from '@/stores/spots';
 import type { Spot } from '@/stores/spots';
 import { useAuthStore } from '@/stores/auth';
@@ -8,6 +8,7 @@ import BaseButton from './BaseButton.vue';
 const spotsStore = useSpotsStore();
 const authStore = useAuthStore();
 const emit = defineEmits(['spot-selected', 'start-creating']);
+const search = ref('');
 
 onMounted(() => {
   // The fetch is already called in App.vue, so this is redundant
@@ -17,50 +18,40 @@ onMounted(() => {
 const handleSpotClick = (spot: Spot) => {
   emit('spot-selected', spot);
 };
+
+const filteredSpots = computed(() => {
+  if (!search.value) return spotsStore.spots;
+  return spotsStore.spots.filter(
+    (spot) =>
+      spot.name.toLowerCase().includes(search.value.toLowerCase()) ||
+      (spot.description &&
+        spot.description.toLowerCase().includes(search.value.toLowerCase()))
+  );
+});
 </script>
 
 <template>
-  <div>
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold text-gray-800">Skate Spots</h1>
-      <BaseButton
-        @click="$emit('start-creating')"
-        v-if="authStore.isAuthenticated"
-      >
-        Add Spot
-      </BaseButton>
-    </div>
-    <div class="mb-4">
+  <div class="flex flex-col h-full p-4">
+    <div class="flex items-center mb-2">
       <input
+        v-model="search"
         type="text"
-        v-model="spotsStore.searchQuery"
         placeholder="Search spots..."
-        class="w-full px-3 py-2 border rounded-lg"
+        class="flex-1 rounded border px-2 py-1 text-sm"
       />
     </div>
-    <div v-if="spotsStore.isLoading" class="text-center">
-      <p class="text-gray-600">Loading spots...</p>
-    </div>
-    <div v-else-if="spotsStore.error" class="text-red-500 text-center">
-      <p>{{ spotsStore.error }}</p>
-    </div>
-    <div v-else-if="spotsStore.filteredSpots.length === 0" class="text-center">
-      <p class="text-gray-600">No spots found.</p>
-    </div>
-    <ul v-else class="space-y-4">
-      <li
-        v-for="spot in spotsStore.filteredSpots"
+    <div class="flex-1 overflow-y-auto">
+      <div
+        v-for="spot in filteredSpots"
         :key="spot.id"
-        class="p-4 bg-white border rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
-        @click="handleSpotClick(spot)"
+        class="mb-2 cursor-pointer rounded hover:bg-gray-100 p-2"
+        @click="$emit('spot-selected', spot)"
       >
-        <div class="flex justify-between items-start">
-          <div>
-            <h2 class="text-xl font-semibold text-gray-900">{{ spot.name }}</h2>
-            <p class="text-gray-700">{{ spot.description }}</p>
-          </div>
+        <div class="font-semibold">{{ spot.name }}</div>
+        <div v-if="spot.description" class="text-xs text-gray-500">
+          {{ spot.description }}
         </div>
-      </li>
-    </ul>
+      </div>
+    </div>
   </div>
 </template>

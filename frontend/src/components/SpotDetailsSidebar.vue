@@ -4,16 +4,7 @@
   >
     <div class="flex justify-between items-center p-4 border-b">
       <h2 class="text-xl font-bold">{{ spot.name }}</h2>
-      <button
-        @click="$emit('close')"
-        class="text-gray-500 hover:text-gray-800 text-2xl"
-      >
-        &times;
-      </button>
-    </div>
-    <div class="p-4 flex-1 overflow-y-auto">
-      <p class="mb-2 text-gray-700">{{ spot.description }}</p>
-      <div class="flex space-x-2 mb-4">
+      <div class="flex items-center space-x-2">
         <BaseButton
           @click="$emit('edit-spot', spot)"
           variant="secondary"
@@ -23,7 +14,18 @@
         <BaseButton @click="handleDelete" variant="danger" size="sm"
           >Delete</BaseButton
         >
+        <button
+          @click="$emit('close')"
+          class="text-gray-500 hover:text-gray-800 text-2xl ml-2"
+        >
+          &times;
+        </button>
       </div>
+    </div>
+    <div class="p-4 flex-1 overflow-y-auto">
+      <p v-if="spot.description" class="mb-2 text-gray-700">
+        {{ spot.description }}
+      </p>
       <hr class="mb-4" />
       <h4 class="font-semibold mb-2">Comments</h4>
       <CommentList :comments="spot.comments || []" />
