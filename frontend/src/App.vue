@@ -104,7 +104,9 @@ const handleMapReady = () => {
     <header
       class="bg-white shadow px-4 py-2 flex items-center justify-between z-10"
     >
-      <h1 class="text-2xl font-bold">SkateSpot Redux</h1>
+      <h1 class="text-2xl font-bold">
+        <span>skatespot</span><span class="text-blue-600">.app</span>
+      </h1>
       <div>
         <BaseButton v-if="!authStore.isAuthenticated" @click="authStore.login"
           >Login with Google</BaseButton
@@ -129,6 +131,12 @@ const handleMapReady = () => {
       <div
         class="h-full bg-gray-50 border-r border-gray-200 w-[352px] flex-shrink-0"
       >
+        <div class="flex items-center justify-between px-4 pt-4 pb-2">
+          <h2 class="text-2xl font-bold">Spots</h2>
+          <BaseButton @click="handleStartCreating" size="sm"
+            >Add Spot</BaseButton
+          >
+        </div>
         <SpotList
           @start-creating="handleStartCreating"
           @spot-selected="handleSpotSelected"
