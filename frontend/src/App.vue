@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import {
   useSpotsStore,
   type Spot,
@@ -20,9 +20,17 @@ const mapRef = ref<InstanceType<typeof Map> | null>(null);
 const isFormOpen = ref(false);
 const editingSpot = ref<Spot | null>(null);
 const selectedSpot = ref<Spot | null>(null);
+const isCreating = ref(false);
+
+const selectedSpotFromStore = computed(() => {
+  if (!selectedSpot.value) return null;
+  return spotsStore.spots.find((s) => s.id === selectedSpot.value?.id) || null;
+});
 
 function handleSpotSelected(spot: Spot) {
-  selectedSpot.value = spot;
+  // Always reference the store's spot object for reactivity
+  const storeSpot = spotsStore.spots.find((s) => s.id === spot.id);
+  selectedSpot.value = storeSpot || spot;
   // Center the map on the selected spot
   if (mapRef.value && spot.location && spot.location.coordinates) {
     // coordinates: [lng, lat] -> setCenter expects [lat, lng]
@@ -43,9 +51,15 @@ const handleBoundsChanged = (bounds: {
 };
 
 const handleStartCreating = () => {
+  isCreating.value = true;
+  selectedSpot.value = null;
   editingSpot.value = null;
-  isFormOpen.value = true;
+  isFormOpen.value = false;
 };
+
+function handleCreateFinished() {
+  isCreating.value = false;
+}
 
 function closeSidebar() {
   selectedSpot.value = null;
@@ -115,33 +129,38 @@ const handleMapReady = () => {
       <div
         class="h-full bg-gray-50 border-r border-gray-200 w-[352px] flex-shrink-0"
       >
-        <SpotList @add-spot="openForm" @spot-selected="handleSpotSelected" />
+        <SpotList
+          @start-creating="handleStartCreating"
+          @spot-selected="handleSpotSelected"
+        />
       </div>
       <!-- Map -->
       <div class="flex-1 relative min-w-0">
         <Map
           ref="mapRef"
           :spots="spotsStore.spots"
+          :isCreating="isCreating"
           @bounds-changed="handleBoundsChanged"
           @spot-selected="handleSpotSelected"
           @ready="handleMapReady"
+          @create-finished="handleCreateFinished"
         />
       </div>
       <!-- Right Sidebar (in flex flow) -->
       <div
-        v-if="selectedSpot"
+        v-if="selectedSpotFromStore"
         class="h-full w-96 bg-white shadow-lg z-10 flex flex-col border-l border-gray-200"
       >
         <SpotDetailsSidebar
-          :spot="selectedSpot"
+          :spot="selectedSpotFromStore"
           @close="closeSidebar"
           @edit-spot="openEditForm"
         />
       </div>
     </div>
-    <!-- Spot Form Modal -->
+    <!-- Spot Form Modal (only for editing) -->
     <SpotForm
-      v-if="isFormOpen"
+      v-if="isFormOpen && editingSpot"
       :spot="editingSpot"
       @submit="handleFormSubmit"
       @close="closeForm"
