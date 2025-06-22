@@ -150,7 +150,10 @@ const handleMapReady = () => {
       >
         <div class="flex items-center justify-between px-4 pt-4 pb-2">
           <h2 class="text-2xl font-bold">Spots</h2>
-          <BaseButton @click="handleStartCreating" size="sm"
+          <BaseButton
+            v-if="authStore.isAuthenticated"
+            @click="handleStartCreating"
+            size="sm"
             >Add Spot</BaseButton
           >
         </div>

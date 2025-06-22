@@ -5,15 +5,17 @@
     <div class="flex justify-between items-center p-4 border-b">
       <h2 class="text-xl font-bold">{{ spot.name }}</h2>
       <div class="flex items-center space-x-2">
-        <BaseButton
-          @click="$emit('edit-spot', spot)"
-          variant="secondary"
-          size="sm"
-          >Edit</BaseButton
-        >
-        <BaseButton @click="handleDelete" variant="danger" size="sm"
-          >Delete</BaseButton
-        >
+        <template v-if="canEdit">
+          <BaseButton
+            @click="$emit('edit-spot', spot)"
+            variant="secondary"
+            size="sm"
+            >Edit</BaseButton
+          >
+          <BaseButton @click="handleDelete" variant="danger" size="sm"
+            >Delete</BaseButton
+          >
+        </template>
         <button
           @click="$emit('close')"
           class="text-gray-500 hover:text-gray-800 text-2xl ml-2"
@@ -35,15 +37,25 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits, computed } from 'vue';
 import BaseButton from './BaseButton.vue';
 import CommentList from './CommentList.vue';
 import CommentForm from './CommentForm.vue';
 import { useSpotsStore, type Spot } from '@/stores/spots';
+import { useAuthStore } from '@/stores/auth';
 
 const props = defineProps<{ spot: Spot }>();
 const emit = defineEmits(['close', 'edit-spot']);
 const spotsStore = useSpotsStore();
+const authStore = useAuthStore();
+
+const canEdit = computed(() => {
+  return (
+    authStore.isAuthenticated &&
+    authStore.user &&
+    authStore.user.id === props.spot.user_id
+  );
+});
 
 const handleDelete = async () => {
   if (confirm('Are you sure you want to delete this spot?')) {
