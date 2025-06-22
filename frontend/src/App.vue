@@ -23,6 +23,14 @@ const selectedSpot = ref<Spot | null>(null);
 
 function handleSpotSelected(spot: Spot) {
   selectedSpot.value = spot;
+  // Center the map on the selected spot
+  if (mapRef.value && spot.location && spot.location.coordinates) {
+    // coordinates: [lng, lat] -> setCenter expects [lat, lng]
+    mapRef.value.setCenter([
+      spot.location.coordinates[1],
+      spot.location.coordinates[0],
+    ]);
+  }
 }
 
 const handleBoundsChanged = (bounds: {
@@ -110,7 +118,7 @@ const handleMapReady = () => {
         <SpotList @add-spot="openForm" @spot-selected="handleSpotSelected" />
       </div>
       <!-- Map -->
-      <div class="flex-1 relative">
+      <div class="flex-1 relative min-w-0">
         <Map
           ref="mapRef"
           :spots="spotsStore.spots"
@@ -119,13 +127,17 @@ const handleMapReady = () => {
           @ready="handleMapReady"
         />
       </div>
-      <!-- Right Sidebar -->
-      <SpotDetailsSidebar
+      <!-- Right Sidebar (in flex flow) -->
+      <div
         v-if="selectedSpot"
-        :spot="selectedSpot"
-        @close="closeSidebar"
-        @edit-spot="openEditForm"
-      />
+        class="h-full w-96 bg-white shadow-lg z-10 flex flex-col border-l border-gray-200"
+      >
+        <SpotDetailsSidebar
+          :spot="selectedSpot"
+          @close="closeSidebar"
+          @edit-spot="openEditForm"
+        />
+      </div>
     </div>
     <!-- Spot Form Modal -->
     <SpotForm
