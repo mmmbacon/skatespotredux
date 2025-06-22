@@ -3,6 +3,7 @@ import { onMounted } from 'vue';
 import { useSpotsStore } from './stores/spots';
 import { useAuthStore } from './stores/auth';
 import Map from './components/Map.vue';
+import SpotList from './components/SpotList.vue';
 import BaseButton from './components/BaseButton.vue';
 
 const authStore = useAuthStore();
@@ -27,9 +28,14 @@ onMounted(() => {
         <BaseButton @click="authStore.login">Login with Google</BaseButton>
       </div>
     </header>
-    <main class="flex-grow relative">
-      <Map :spots="spotsStore.spots" />
-    </main>
+    <div class="flex flex-grow overflow-hidden">
+      <aside class="w-80 bg-gray-100 p-4 overflow-y-auto flex-shrink-0">
+        <SpotList />
+      </aside>
+      <main class="flex-grow relative">
+        <Map :spots="spotsStore.spots" />
+      </main>
+    </div>
   </div>
 </template>
 
