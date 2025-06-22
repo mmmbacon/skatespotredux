@@ -22,6 +22,9 @@ const editingSpot = ref<Spot | null>(null);
 const selectedSpot = ref<Spot | null>(null);
 const isCreating = ref(false);
 
+// Track the last selected spot for recentering
+const lastSelectedSpot = ref<Spot | null>(null);
+
 const selectedSpotFromStore = computed(() => {
   if (!selectedSpot.value) return null;
   return spotsStore.spots.find((s) => s.id === selectedSpot.value?.id) || null;
@@ -31,13 +34,14 @@ function handleSpotSelected(spot: Spot) {
   // Always reference the store's spot object for reactivity
   const storeSpot = spotsStore.spots.find((s) => s.id === spot.id);
   selectedSpot.value = storeSpot || spot;
-  // Center the map on the selected spot, offsetting for the left sidebar
+  lastSelectedSpot.value = storeSpot || spot;
+  // Center the map on the selected spot, offsetting for half the left sidebar
   if (mapRef.value && spot.location && spot.location.coordinates) {
     // coordinates: [lng, lat] -> panToWithOffset expects [lat, lng]
     mapRef.value.panToWithOffset(
       spot.location.coordinates[1],
       spot.location.coordinates[0],
-      352 // sidebar width in px
+      176 // half sidebar width in px
     );
   }
 }
@@ -64,6 +68,18 @@ function handleCreateFinished() {
 
 function closeSidebar() {
   selectedSpot.value = null;
+  // Optionally, re-center the map on the last selected spot (if needed)
+  if (
+    mapRef.value &&
+    lastSelectedSpot.value &&
+    lastSelectedSpot.value.location &&
+    lastSelectedSpot.value.location.coordinates
+  ) {
+    mapRef.value.setCenter([
+      lastSelectedSpot.value.location.coordinates[1],
+      lastSelectedSpot.value.location.coordinates[0],
+    ]);
+  }
 }
 
 function openEditForm(spot: Spot) {
