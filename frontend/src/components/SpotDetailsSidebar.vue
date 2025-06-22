@@ -53,7 +53,8 @@ const canEdit = computed(() => {
   return (
     authStore.isAuthenticated &&
     authStore.user &&
-    authStore.user.id === props.spot.user_id
+    props.spot.user &&
+    authStore.user.id === props.spot.user.id
   );
 });
 

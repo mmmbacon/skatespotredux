@@ -25,7 +25,8 @@ export interface Spot {
     type: string;
     coordinates: [number, number];
   };
-  user_id: string;
+  user: User;
+  user_id?: string;
   created_at: string;
   updated_at?: string;
   comments?: Comment[];
