@@ -25,29 +25,8 @@
               number,
             ]
           "
+          @click="$emit('spot-selected', spot)"
         >
-          <l-popup>
-            <div class="w-48">
-              <h3 class="font-bold">{{ spot.name }}</h3>
-              <p class="mb-2">{{ spot.description }}</p>
-              <div class="flex space-x-2">
-                <BaseButton
-                  @click="$emit('edit-spot', spot)"
-                  variant="secondary"
-                  size="sm"
-                >
-                  Edit
-                </BaseButton>
-                <BaseButton
-                  @click="handleDelete(spot.id)"
-                  variant="danger"
-                  size="sm"
-                >
-                  Delete
-                </BaseButton>
-              </div>
-            </div>
-          </l-popup>
         </l-marker>
         <!-- Draggable marker for editing -->
         <l-marker
@@ -70,11 +49,20 @@
           <l-popup :close-on-click="false" :close-button="false">
             <div class="w-48">
               <h3 class="font-bold mb-2">Create New Spot</h3>
+              <div class="text-xs text-gray-500 mb-2">
+                Drag pin to locate spot
+              </div>
               <input
                 v-model="newSpotName"
                 placeholder="Spot Name"
                 class="w-full px-2 py-1 border rounded-md mb-2"
               />
+              <textarea
+                v-model="newSpotDescription"
+                placeholder="Description (optional)"
+                class="w-full px-2 py-1 border rounded-md mb-2"
+                rows="2"
+              ></textarea>
               <BaseButton @click="handleCreateSpot" size="sm" variant="default"
                 >Save</BaseButton
               >
@@ -109,6 +97,8 @@ import type { Spot } from '@/stores/spots';
 import { useSpotsStore } from '@/stores/spots';
 import type { SpotCreatePayload } from '@/stores/spots';
 import BaseButton from './BaseButton.vue';
+import CommentList from './CommentList.vue';
+import CommentForm from './CommentForm.vue';
 import { useToast } from 'vue-toastification';
 import L from 'leaflet';
 
@@ -159,6 +149,7 @@ const emit = defineEmits([
   'location-updated',
   'create-finished',
   'edit-spot',
+  'spot-selected',
 ]);
 const editableLocation = ref<[number, number] | null>(null);
 
@@ -195,6 +186,7 @@ const openPopupForSpot = (spotId: string) => {
 };
 
 const newSpotName = ref('');
+const newSpotDescription = ref('');
 const newSpotLocation = ref<[number, number] | null>(null);
 const newMarkerRef = ref(null);
 
@@ -213,6 +205,7 @@ watch(
     } else {
       newSpotLocation.value = null;
       newSpotName.value = '';
+      newSpotDescription.value = '';
     }
   }
 );
@@ -229,7 +222,7 @@ const handleCreateSpot = async () => {
   if (newSpotName.value && newSpotLocation.value) {
     const payload: SpotCreatePayload = {
       name: newSpotName.value,
-      description: '', // Description can be added via edit
+      description: newSpotDescription.value,
       location: {
         type: 'Point',
         coordinates: [newSpotLocation.value[1], newSpotLocation.value[0]], // Lng, Lat
@@ -239,6 +232,11 @@ const handleCreateSpot = async () => {
     emit('create-finished');
     toast.success('Spot created successfully!');
   }
+};
+
+const handleAddComment = async (spotId: string, content: string) => {
+  await spotsStore.addComment(spotId, content);
+  toast.success('Comment added!');
 };
 
 const handleDelete = async (spotId: string) => {
@@ -300,9 +298,11 @@ defineExpose({
   left: 0;
   width: 100%;
   height: 100%;
+  z-index: 0;
 }
 .map-instance {
   width: 100%;
   height: 100%;
+  z-index: 0;
 }
 </style>
