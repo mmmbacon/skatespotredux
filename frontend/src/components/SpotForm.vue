@@ -38,7 +38,7 @@ const handleSave = () => {
 <template>
   <div
     v-if="isVisible"
-    class="fixed inset-0 bg-black bg-opacity-50 z-40 flex justify-center items-center"
+    class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"
   >
     <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
       <h2 class="text-2xl font-bold mb-4">
