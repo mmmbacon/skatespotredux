@@ -33,7 +33,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/google/login")
 
 @router.get("/login")
 async def login_via_google(request: Request):
-    redirect_uri = request.url_for("google_callback")
+    # This is a temporary workaround for local development.
+    # In a production environment, you would want to use request.url_for
+    # and ensure your proxy is setting the X-Forwarded-Proto and
+    # X-Forwarded-Host headers correctly.
+    redirect_uri = "http://localhost:3000/auth/google/callback"
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
