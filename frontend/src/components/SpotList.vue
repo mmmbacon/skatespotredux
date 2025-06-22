@@ -1,102 +1,21 @@
 <script setup lang="ts">
-import { onMounted, defineEmits, ref, watch } from 'vue';
+import { onMounted, defineEmits } from 'vue';
 import { useSpotsStore } from '@/stores/spots';
 import type { Spot } from '@/stores/spots';
 import { useAuthStore } from '@/stores/auth';
 import BaseButton from './BaseButton.vue';
-import SpotForm from './SpotForm.vue';
 
 const spotsStore = useSpotsStore();
 const authStore = useAuthStore();
-const emit = defineEmits([
-  'focus-spot',
-  'location-to-edit',
-  'location-updated',
-  'start-creating',
-]);
-
-const props = defineProps({
-  editedLocation: {
-    type: Object as () => [number, number] | null,
-    default: null,
-  },
-});
-
-const isFormVisible = ref(false);
-const editingSpot = ref<Spot | null>(null);
-const formLocation = ref<[number, number] | null>(null);
+const emit = defineEmits(['spot-selected', 'start-creating']);
 
 onMounted(() => {
   // The fetch is already called in App.vue, so this is redundant
   // spotsStore.fetchSpots();
 });
 
-watch(
-  () => props.editedLocation,
-  (newLocation) => {
-    formLocation.value = newLocation;
-  }
-);
-
-watch(isFormVisible, (isVisible) => {
-  if (!isVisible) {
-    emit('location-to-edit', null);
-  }
-});
-
 const handleSpotClick = (spot: Spot) => {
-  emit('focus-spot', spot.location.coordinates.slice().reverse());
-};
-
-const showCreateForm = () => {
-  editingSpot.value = null;
-  // For creating, we'll need to get the current map center
-  // This is a bit tricky, so for now let's use a default
-  // and let the user drag the marker.
-  const initialLocation: [number, number] = [51.05, -114.09]; // Default to Calgary
-  formLocation.value = initialLocation;
-  emit('location-to-edit', initialLocation);
-  isFormVisible.value = true;
-};
-
-const showEditForm = (spot: Spot) => {
-  editingSpot.value = spot;
-  const spotLocation: [number, number] = spot.location.coordinates
-    .slice()
-    .reverse() as [number, number];
-  formLocation.value = spotLocation;
-  emit('location-to-edit', spotLocation);
-  isFormVisible.value = true;
-};
-
-const closeForm = () => {
-  isFormVisible.value = false;
-  editingSpot.value = null;
-  formLocation.value = null;
-  emit('location-to-edit', null);
-};
-
-const handleSave = async (formData: any) => {
-  if (!editingSpot.value) return;
-
-  const payload = {
-    ...formData,
-    location: {
-      type: 'Point',
-      coordinates: formLocation.value
-        ? [formLocation.value[1], formLocation.value[0]]
-        : [0, 0], // Lng, Lat
-    },
-  };
-
-  await spotsStore.updateSpot(editingSpot.value.id, payload);
-  closeForm();
-};
-
-const handleDelete = async (spotId: string) => {
-  if (confirm('Are you sure you want to delete this spot?')) {
-    await spotsStore.deleteSpot(spotId);
-  }
+  emit('spot-selected', spot);
 };
 </script>
 
@@ -140,33 +59,8 @@ const handleDelete = async (spotId: string) => {
             <h2 class="text-xl font-semibold text-gray-900">{{ spot.name }}</h2>
             <p class="text-gray-700">{{ spot.description }}</p>
           </div>
-          <div
-            v-if="authStore.user && authStore.user.id === spot.user_id"
-            class="flex space-x-2 flex-shrink-0 ml-4"
-          >
-            <BaseButton
-              @click.stop="showEditForm(spot)"
-              variant="secondary"
-              size="sm"
-            >
-              Edit
-            </BaseButton>
-            <BaseButton
-              @click.stop="handleDelete(spot.id)"
-              variant="danger"
-              size="sm"
-            >
-              Delete
-            </BaseButton>
-          </div>
         </div>
       </li>
     </ul>
-    <SpotForm
-      :is-visible="isFormVisible"
-      :spot="editingSpot"
-      @close="closeForm"
-      @save="handleSave"
-    />
   </div>
 </template>

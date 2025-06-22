@@ -26,8 +26,26 @@
           "
         >
           <l-popup>
-            <b>{{ spot.name }}</b
-            ><br />{{ spot.description }}
+            <div class="w-48">
+              <h3 class="font-bold">{{ spot.name }}</h3>
+              <p class="mb-2">{{ spot.description }}</p>
+              <div class="flex space-x-2">
+                <BaseButton
+                  @click="$emit('edit-spot', spot)"
+                  variant="secondary"
+                  size="sm"
+                >
+                  Edit
+                </BaseButton>
+                <BaseButton
+                  @click="handleDelete(spot.id)"
+                  variant="danger"
+                  size="sm"
+                >
+                  Delete
+                </BaseButton>
+              </div>
+            </div>
           </l-popup>
         </l-marker>
         <!-- Draggable marker for editing -->
@@ -139,6 +157,7 @@ const emit = defineEmits([
   'bounds-changed',
   'location-updated',
   'create-finished',
+  'edit-spot',
 ]);
 const editableLocation = ref<[number, number] | null>(null);
 
@@ -204,6 +223,13 @@ const handleCreateSpot = async () => {
     await spotsStore.addSpot(payload);
     emit('create-finished');
     toast.success('Spot created successfully!');
+  }
+};
+
+const handleDelete = async (spotId: string) => {
+  if (confirm('Are you sure you want to delete this spot?')) {
+    await spotsStore.deleteSpot(spotId);
+    toast.success('Spot deleted successfully!');
   }
 };
 
