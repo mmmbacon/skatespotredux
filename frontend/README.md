@@ -1,5 +1,38 @@
-# Vue 3 + TypeScript + Vite
+# SkateSpot Frontend (Vue 3 + Vite)
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+This directory contains the single-page application that users interact with.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## Tech stack
+
+- **Vue 3** with `<script setup>` and TypeScript
+- **Vite 6** – lightning-fast dev server & build
+- **Pinia** – state management
+- **Tailwind CSS** + **shadcn-vue** – component library & utility classes
+- **Leaflet** + `@vue-leaflet/vue-leaflet` for interactive maps
+
+## Local dev
+
+```bash
+# Hot-reload dev server (ports 5173)
+pnpm -F frontend dev
+```
+
+The SPA proxies API calls directly to `http://localhost:3000` (backend) – no extra config needed while running via Docker Compose.
+
+## Build for production
+
+```bash
+pnpm -F frontend build
+# output in dist/ – automatically copied into the nginx image during docker build
+```
+
+## Project structure (src/)
+
+```
+components/   # reusable UI pieces (e.g. Map, Button)
+composables/  # shared logic (e.g. useAuth)
+assets/       # static icons/images
+App.vue       # root component
+main.ts       # app bootstrap
+style.css     # Tailwind entry + global utilities
+```

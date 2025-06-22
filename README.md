@@ -46,3 +46,25 @@ All `docker compose` commands should be run from the `infra/` directory.
 - **View logs for a specific service:** `docker compose logs -f <service_name>`
 - **Run a one-off command in a service:** `docker compose run --rm <service_name> <command>` (e.g., `docker compose run --rm backend pytest`)
 - **Open a shell inside a running service:** `docker compose exec <service_name> /bin/sh`
+
+## About SkateSpot Redux
+
+SkateSpot Redux is a full-stack web application for discovering, sharing and bookmarking skate spots.
+
+Key features:
+
+- Google OAuth login (social sign-in only, no passwords)
+- Interactive map (Leaflet) to explore & drop new spots
+- Photo uploads, comments and voting (road-map)
+- Mobile-first UI styled with Tailwind CSS + shadcn-vue components
+
+### High-level Architecture
+
+| Layer         | Tech                                   | Container          |
+| ------------- | -------------------------------------- | ------------------ |
+| Frontend      | Vue 3 + Vite + Pinia + Tailwind/shadcn | `frontend` (Nginx) |
+| API           | FastAPI + SQLAlchemy 2 async           | `backend`          |
+| Database      | PostgreSQL 15 + PostGIS                | `postgres`         |
+| Orchestration | Docker Compose (dev)                   | `infra/`           |
+
+> For production we plan to move to Fly .io or Kubernetes.
