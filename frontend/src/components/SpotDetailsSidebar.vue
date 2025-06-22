@@ -1,6 +1,6 @@
 <template>
   <div
-    class="bg-white shadow-lg z-10 flex flex-col border-l border-gray-200 h-full w-full"
+    class="bg-white z-10 flex flex-col border-l border-gray-200 h-full w-full"
   >
     <div class="flex justify-between items-center p-4 border-b">
       <h2 class="text-xl font-bold">{{ spot.name }}</h2>
