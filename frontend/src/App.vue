@@ -1,20 +1,31 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useSpotsStore } from './stores/spots';
+import {
+  useSpotsStore,
+  type Spot,
+  type SpotCreatePayload,
+} from './stores/spots';
 import { useAuthStore } from './stores/auth';
 import Map from './components/Map.vue';
 import SpotList from './components/SpotList.vue';
+import SpotForm from './components/SpotForm.vue';
 import BaseButton from './components/BaseButton.vue';
 
 const authStore = useAuthStore();
 const spotsStore = useSpotsStore();
 const mapRef = ref<InstanceType<typeof Map> | null>(null);
-const editedLocation = ref<[number, number] | null>(null);
-const isCreatingSpot = ref(false);
 
-const handleFocusSpot = (coordinates: [number, number]) => {
+// State for SpotForm
+const isFormVisible = ref(false);
+const editingSpot = ref<Spot | null>(null);
+
+const handleSpotSelected = (spot: Spot) => {
   if (mapRef.value) {
-    mapRef.value.setCenter(coordinates);
+    const coords: [number, number] = spot.location.coordinates
+      .slice()
+      .reverse() as [number, number];
+    mapRef.value.setCenter(coords);
+    mapRef.value.openPopupForSpot(spot.id);
   }
 };
 
@@ -27,20 +38,28 @@ const handleBoundsChanged = (bounds: {
   spotsStore.fetchSpots(bounds);
 };
 
-const handleLocationToEdit = (location: [number, number] | null) => {
-  editedLocation.value = location;
-};
-
-const handleLocationUpdated = (location: [number, number]) => {
-  editedLocation.value = location;
-};
-
 const handleStartCreating = () => {
-  isCreatingSpot.value = true;
+  editingSpot.value = null;
+  isFormVisible.value = true;
 };
 
-const handleCreateFinished = () => {
-  isCreatingSpot.value = false;
+const showEditForm = (spot: Spot) => {
+  editingSpot.value = spot;
+  isFormVisible.value = true;
+};
+
+const closeForm = () => {
+  isFormVisible.value = false;
+  editingSpot.value = null;
+};
+
+const handleSave = async (formData: Omit<Spot, 'id' | 'user_id'>) => {
+  if (editingSpot.value) {
+    await spotsStore.updateSpot(editingSpot.value.id, formData);
+  } else {
+    await spotsStore.addSpot(formData as SpotCreatePayload);
+  }
+  closeForm();
 };
 </script>
 
@@ -61,9 +80,7 @@ const handleCreateFinished = () => {
     <div class="flex flex-grow overflow-hidden">
       <aside class="w-80 bg-gray-100 p-4 overflow-y-auto flex-shrink-0">
         <SpotList
-          @focus-spot="handleFocusSpot"
-          @location-to-edit="handleLocationToEdit"
-          :edited-location="editedLocation"
+          @spot-selected="handleSpotSelected"
           @start-creating="handleStartCreating"
         />
       </aside>
@@ -72,10 +89,13 @@ const handleCreateFinished = () => {
           ref="mapRef"
           :spots="spotsStore.spots"
           @bounds-changed="handleBoundsChanged"
-          :location-to-edit="editedLocation"
-          @location-updated="handleLocationUpdated"
-          :is-creating="isCreatingSpot"
-          @create-finished="handleCreateFinished"
+          @edit-spot="showEditForm"
+        />
+        <SpotForm
+          :is-visible="isFormVisible"
+          :spot="editingSpot"
+          @close="closeForm"
+          @save="handleSave"
         />
       </main>
     </div>
