@@ -19,6 +19,7 @@ starlette
 psycopg2-binary
 geoalchemy2
 shapely
+boto3
 
 # For testing
 # pytest

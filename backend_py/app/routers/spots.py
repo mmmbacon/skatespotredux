@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
@@ -6,6 +6,8 @@ from sqlalchemy.future import select
 from geoalchemy2.functions import ST_MakeEnvelope, ST_Contains
 from typing import List, Optional
 from uuid import UUID
+from app.config import get_r2_client, R2_BUCKET, R2_ENDPOINT
+from fastapi.responses import JSONResponse
 
 from .. import schemas
 from ..database import get_db
@@ -148,4 +150,23 @@ async def delete_spot(
 
     await db.delete(db_spot)
     await db.commit()
-    return Response(status_code=204) 
+    return Response(status_code=204)
+
+
+@router.post("/image-upload-url")
+def create_presigned_url(
+    filename: str = Query(..., description="The name of the file to upload"),
+    content_type: str = Query(..., description="The MIME type of the file")
+):
+    s3 = get_r2_client()
+    url = s3.generate_presigned_url(
+        ClientMethod="put_object",
+        Params={
+            "Bucket": R2_BUCKET,
+            "Key": filename,
+            "ContentType": content_type,
+        },
+        ExpiresIn=600,  # 10 minutes
+    )
+    public_url = f"https://{R2_BUCKET}.{R2_ENDPOINT.replace('https://', '')}/{filename}"
+    return JSONResponse({"url": url, "public_url": public_url}) 
