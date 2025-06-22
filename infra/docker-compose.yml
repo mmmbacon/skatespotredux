@@ -39,12 +39,18 @@ services:
     container_name: skatespot-backend
 
   frontend:
-    build: ../frontend
+    build:
+      context: ../frontend
+      target: builder
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
     ports:
-      - '5173:80'
+      - '5173:5173'
     container_name: skatespot-frontend
+    command: pnpm run dev --host
 
 volumes:
   pgdata:

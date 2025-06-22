@@ -16,7 +16,7 @@ const classes = computed(() => {
     return 'inline-flex items-center rounded-md bg-black text-white px-3 py-2 text-sm font-medium shadow hover:bg-black/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
   }
   // outline
-  return 'inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium text-black dark:text-white shadow hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
+  return 'inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium text-white shadow hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
 });
 </script>
 
