@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import {
   useSpotsStore,
   type Spot,
@@ -10,24 +10,20 @@ import Map from './components/Map.vue';
 import SpotList from './components/SpotList.vue';
 import SpotForm from './components/SpotForm.vue';
 import BaseButton from './components/BaseButton.vue';
+import SpotDetailsSidebar from './components/SpotDetailsSidebar.vue';
 
 const authStore = useAuthStore();
 const spotsStore = useSpotsStore();
 const mapRef = ref<InstanceType<typeof Map> | null>(null);
 
 // State for SpotForm
-const isFormVisible = ref(false);
+const isFormOpen = ref(false);
 const editingSpot = ref<Spot | null>(null);
+const selectedSpot = ref<Spot | null>(null);
 
-const handleSpotSelected = (spot: Spot) => {
-  if (mapRef.value) {
-    const coords: [number, number] = spot.location.coordinates
-      .slice()
-      .reverse() as [number, number];
-    mapRef.value.setCenter(coords);
-    mapRef.value.openPopupForSpot(spot.id);
-  }
-};
+function handleSpotSelected(spot: Spot) {
+  selectedSpot.value = spot;
+}
 
 const handleBoundsChanged = (bounds: {
   north: number;
@@ -40,64 +36,107 @@ const handleBoundsChanged = (bounds: {
 
 const handleStartCreating = () => {
   editingSpot.value = null;
-  isFormVisible.value = true;
+  isFormOpen.value = true;
 };
 
-const showEditForm = (spot: Spot) => {
+function closeSidebar() {
+  selectedSpot.value = null;
+}
+
+function openEditForm(spot: Spot) {
   editingSpot.value = spot;
-  isFormVisible.value = true;
-};
+  isFormOpen.value = true;
+}
 
-const closeForm = () => {
-  isFormVisible.value = false;
+function closeForm() {
+  isFormOpen.value = false;
   editingSpot.value = null;
-};
+}
 
-const handleSave = async (formData: Omit<Spot, 'id' | 'user_id'>) => {
+async function handleFormSubmit(payload: SpotCreatePayload) {
   if (editingSpot.value) {
-    await spotsStore.updateSpot(editingSpot.value.id, formData);
+    await spotsStore.updateSpot(editingSpot.value.id, payload);
   } else {
-    await spotsStore.addSpot(formData as SpotCreatePayload);
+    await spotsStore.createSpot(payload);
   }
   closeForm();
+}
+
+const handleMapReady = () => {
+  const map = mapRef.value?.$refs?.mapRef?.leafletObject;
+  if (map) {
+    const bounds = map.getBounds();
+    spotsStore.fetchSpots({
+      north: bounds.getNorth(),
+      south: bounds.getSouth(),
+      east: bounds.getEast(),
+      west: bounds.getWest(),
+    });
+  }
 };
 </script>
 
 <template>
-  <div id="app-container" class="flex flex-col h-screen">
+  <div class="h-screen flex flex-col">
+    <!-- Header -->
     <header
-      class="bg-gray-800 text-white p-4 flex justify-between items-center flex-shrink-0"
+      class="bg-white shadow px-4 py-2 flex items-center justify-between z-10"
     >
-      <h1 class="text-xl">SkateSpot</h1>
-      <div v-if="authStore.isAuthenticated">
-        <span>Welcome, {{ authStore.user?.name }}</span>
-        <BaseButton @click="authStore.logout" class="ml-4">Logout</BaseButton>
-      </div>
-      <div v-else>
-        <BaseButton @click="authStore.login">Login with Google</BaseButton>
+      <h1 class="text-2xl font-bold">SkateSpot Redux</h1>
+      <div>
+        <BaseButton v-if="!authStore.isAuthenticated" @click="authStore.login"
+          >Login with Google</BaseButton
+        >
+        <span v-else class="flex items-center space-x-2">
+          <img
+            :src="authStore.user?.avatar_url"
+            alt="avatar"
+            class="w-8 h-8 rounded-full"
+            v-if="authStore.user?.avatar_url"
+          />
+          <span>{{ authStore.user?.name || authStore.user?.email }}</span>
+          <BaseButton @click="authStore.logout" variant="secondary"
+            >Logout</BaseButton
+          >
+        </span>
       </div>
     </header>
-    <div class="flex flex-grow overflow-hidden">
-      <aside class="w-80 bg-gray-100 p-4 overflow-y-auto flex-shrink-0">
+    <!-- Main content: flex row -->
+    <div class="flex flex-1 min-h-0">
+      <!-- Left Sidebar -->
+      <aside class="w-64 bg-gray-50 border-r border-gray-200 overflow-y-auto">
         <SpotList
+          :spots="spotsStore.spots"
           @spot-selected="handleSpotSelected"
-          @start-creating="handleStartCreating"
         />
       </aside>
-      <main class="flex-grow relative">
+      <!-- Map -->
+      <main class="flex-1 relative min-w-0">
         <Map
           ref="mapRef"
           :spots="spotsStore.spots"
+          @spot-selected="handleSpotSelected"
+          @ready="handleMapReady"
           @bounds-changed="handleBoundsChanged"
-          @edit-spot="showEditForm"
         />
         <SpotForm
-          :is-visible="isFormVisible"
+          v-if="isFormOpen"
           :spot="editingSpot"
           @close="closeForm"
-          @save="handleSave"
+          @submit="handleFormSubmit"
         />
       </main>
+      <!-- Right Sidebar -->
+      <aside
+        v-if="selectedSpot"
+        class="w-96 bg-white border-l border-gray-200 flex flex-col min-h-0"
+      >
+        <SpotDetailsSidebar
+          :spot="selectedSpot"
+          @close="closeSidebar"
+          @edit-spot="openEditForm"
+        />
+      </aside>
     </div>
   </div>
 </template>
