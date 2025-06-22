@@ -104,40 +104,36 @@ const handleMapReady = () => {
     <!-- Main content: flex row -->
     <div class="flex flex-1 min-h-0">
       <!-- Left Sidebar -->
-      <aside class="w-64 bg-gray-50 border-r border-gray-200 overflow-y-auto">
-        <SpotList
-          :spots="spotsStore.spots"
-          @spot-selected="handleSpotSelected"
-        />
-      </aside>
+      <div
+        class="h-full bg-gray-50 border-r border-gray-200 w-[352px] flex-shrink-0"
+      >
+        <SpotList @add-spot="openForm" @spot-selected="handleSpotSelected" />
+      </div>
       <!-- Map -->
-      <main class="flex-1 relative min-w-0">
+      <div class="flex-1 relative">
         <Map
           ref="mapRef"
           :spots="spotsStore.spots"
+          @bounds-changed="handleBoundsChanged"
           @spot-selected="handleSpotSelected"
           @ready="handleMapReady"
-          @bounds-changed="handleBoundsChanged"
         />
-        <SpotForm
-          v-if="isFormOpen"
-          :spot="editingSpot"
-          @close="closeForm"
-          @submit="handleFormSubmit"
-        />
-      </main>
+      </div>
       <!-- Right Sidebar -->
-      <aside
+      <SpotDetailsSidebar
         v-if="selectedSpot"
-        class="w-96 bg-white border-l border-gray-200 flex flex-col min-h-0"
-      >
-        <SpotDetailsSidebar
-          :spot="selectedSpot"
-          @close="closeSidebar"
-          @edit-spot="openEditForm"
-        />
-      </aside>
+        :spot="selectedSpot"
+        @close="closeSidebar"
+        @edit-spot="openEditForm"
+      />
     </div>
+    <!-- Spot Form Modal -->
+    <SpotForm
+      v-if="isFormOpen"
+      :spot="editingSpot"
+      @submit="handleFormSubmit"
+      @close="closeForm"
+    />
   </div>
 </template>
 
