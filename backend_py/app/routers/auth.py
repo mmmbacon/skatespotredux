@@ -56,13 +56,13 @@ async def google_callback(
 
     if user:
         user.name = user_info.get("name")
-        user.picture = user_info.get("picture")
+        user.avatar_url = user_info.get("picture")
         user.last_login = datetime.utcnow()
     else:
         user = User(
             email=user_info.get("email"),
             name=user_info.get("name"),
-            picture=user_info.get("picture"),
+            avatar_url=user_info.get("picture"),
         )
         db.add(user)
 
@@ -120,7 +120,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
         "id": str(current_user.id),
         "email": current_user.email,
         "name": current_user.name,
-        "picture": current_user.picture,
+        "avatar_url": current_user.avatar_url,
         "created_at": current_user.created_at.isoformat(),
         "last_login": current_user.last_login.isoformat(),
     } 

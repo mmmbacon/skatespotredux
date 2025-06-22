@@ -1,7 +1,10 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, validator
+from typing import Any, Optional
 from uuid import UUID
 from datetime import datetime
+from geoalchemy2.elements import WKBElement
+from shapely.wkb import loads as wkb_loads
+import json
 
 # Basic Spot schema
 class SpotBase(BaseModel):
@@ -18,11 +21,19 @@ class SpotCreate(SpotBase):
 class Spot(SpotBase):
     id: UUID
     user_id: UUID
+    location: dict # The location will always be a GeoJSON dict in the response
     created_at: datetime
     updated_at: Optional[datetime] = None
-    # We will likely want to return GeoJSON here as well in the future
-    # but for now we'll just return the WKT from the db
-    location: str
+
+    @validator("location", pre=True, always=True)
+    def validate_location(cls, v):
+        if isinstance(v, WKBElement):
+            # Parse the WKBElement to a Shapely geometry object
+            geom = wkb_loads(v.data)
+            # Convert the geometry object to a GeoJSON dict
+            return json.loads(json.dumps(geom.__geo_interface__))
+        return v
 
     class Config:
-        orm_mode = True 
+        from_attributes = True
+        arbitrary_types_allowed = True 

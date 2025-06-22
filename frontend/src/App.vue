@@ -1,33 +1,32 @@
 <script setup lang="ts">
-import Map from './components/Map.vue';
+import { onMounted } from 'vue';
+import { useSpotsStore } from './stores/spots';
 import { useAuthStore } from './stores/auth';
+import Map from './components/Map.vue';
 import BaseButton from './components/BaseButton.vue';
 
-const auth = useAuthStore();
+const authStore = useAuthStore();
+const spotsStore = useSpotsStore();
+
+onMounted(() => {
+  spotsStore.fetchSpots();
+});
 </script>
 
 <template>
-  <div id="app-container">
-    <header class="main-header">
-      <div class="logo">SkateSpot</div>
-      <nav class="auth-controls">
-        <div v-if="auth.isAuthenticated" class="user-info">
-          <img
-            v-if="auth.user?.picture"
-            :src="auth.user.picture"
-            alt="User avatar"
-            class="avatar"
-          />
-          <span>{{ auth.user?.name || auth.user?.email }}</span>
-          <BaseButton @click="auth.logout">Sign Out</BaseButton>
-        </div>
-        <BaseButton v-else @click="auth.login">Log In with Google</BaseButton>
-      </nav>
-    </header>
-    <main>
-      <Map />
-    </main>
-  </div>
+  <header class="bg-gray-800 text-white p-4 flex justify-between items-center">
+    <h1 class="text-xl">SkateSpot</h1>
+    <div v-if="authStore.isAuthenticated">
+      <span>Welcome, {{ authStore.user?.name }}</span>
+      <BaseButton @click="authStore.logout" class="ml-4">Logout</BaseButton>
+    </div>
+    <div v-else>
+      <BaseButton @click="authStore.login">Login with Google</BaseButton>
+    </div>
+  </header>
+  <main class="relative" style="height: calc(100vh - 64px)">
+    <Map :spots="spotsStore.spots" />
+  </main>
 </template>
 
 <style>

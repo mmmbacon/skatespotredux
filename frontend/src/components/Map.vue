@@ -7,16 +7,29 @@
           layer-type="base"
           name="OpenStreetMap"
         ></l-tile-layer>
+
+        <!-- Loop through spots and create markers -->
+        <l-marker
+          v-for="spot in spots"
+          :key="spot.id"
+          :lat-lng="spot.location.coordinates.slice().reverse()"
+        >
+          <l-popup>
+            <b>{{ spot.name }}</b
+            ><br />{{ spot.description }}
+          </l-popup>
+        </l-marker>
       </l-map>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, defineProps, PropType } from 'vue';
 import 'leaflet/dist/leaflet.css';
-import { LMap, LTileLayer } from '@vue-leaflet/vue-leaflet';
+import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
 import L from 'leaflet';
+import type { Spot } from '@/stores/spots'; // Import the Spot interface
 
 // This is a common fix for icon path issues with bundlers
 import iconUrl from 'leaflet/dist/images/marker-icon.png';
@@ -27,6 +40,15 @@ L.Icon.Default.mergeOptions({
   iconUrl: iconUrl,
   iconRetinaUrl: iconRetinaUrl,
   shadowUrl: shadowUrl,
+});
+
+// Define props
+const props = defineProps({
+  spots: {
+    type: Array as PropType<Spot[]>,
+    required: true,
+    default: () => [],
+  },
 });
 
 const zoom = ref(12);
