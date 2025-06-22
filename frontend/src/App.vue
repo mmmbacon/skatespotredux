@@ -10,12 +10,19 @@ const authStore = useAuthStore();
 const spotsStore = useSpotsStore();
 const mapRef = ref<InstanceType<typeof Map> | null>(null);
 
-spotsStore.fetchSpots();
-
 const handleFocusSpot = (coordinates: [number, number]) => {
   if (mapRef.value) {
     mapRef.value.setCenter(coordinates);
   }
+};
+
+const handleBoundsChanged = (bounds: {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}) => {
+  spotsStore.fetchSpots(bounds);
 };
 </script>
 
@@ -38,7 +45,11 @@ const handleFocusSpot = (coordinates: [number, number]) => {
         <SpotList @focus-spot="handleFocusSpot" />
       </aside>
       <main class="flex-grow relative">
-        <Map ref="mapRef" :spots="spotsStore.spots" />
+        <Map
+          ref="mapRef"
+          :spots="spotsStore.spots"
+          @bounds-changed="handleBoundsChanged"
+        />
       </main>
     </div>
   </div>

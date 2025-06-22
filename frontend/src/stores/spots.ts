@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, readonly } from 'vue';
+import { ref, readonly, computed } from 'vue';
 import axios from 'axios';
 
 export interface Spot {
@@ -37,12 +37,32 @@ export const useSpotsStore = defineStore('spots', () => {
   const spots = ref<Spot[]>([]);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
+  const searchQuery = ref('');
 
-  async function fetchSpots() {
+  const filteredSpots = computed(() => {
+    if (!searchQuery.value) {
+      return spots.value;
+    }
+    return spots.value.filter(
+      (spot) =>
+        spot.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        spot.description
+          ?.toLowerCase()
+          .includes(searchQuery.value.toLowerCase())
+    );
+  });
+
+  async function fetchSpots(bounds?: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  }) {
     isLoading.value = true;
     error.value = null;
     try {
-      const response = await axios.get('/api/spots/');
+      const config = bounds ? { params: bounds } : {};
+      const response = await axios.get('/api/spots/', config);
       spots.value = response.data;
     } catch (e: any) {
       console.error('Failed to fetch spots', e);
@@ -88,6 +108,8 @@ export const useSpotsStore = defineStore('spots', () => {
 
   return {
     spots,
+    filteredSpots,
+    searchQuery,
     isLoading: readonly(isLoading),
     error: readonly(error),
     fetchSpots,

@@ -2,10 +2,11 @@
   <div class="map-container">
     <div v-if="isMounted" class="map-instance">
       <l-map
-        ref="map"
+        ref="mapRef"
         v-model:zoom="zoom"
         :center="center"
         :zoom-control-position="'bottomright'"
+        @ready="onMapReady"
       >
         <l-tile-layer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -30,7 +31,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, defineProps, PropType, defineExpose } from 'vue';
+import {
+  ref,
+  onMounted,
+  defineProps,
+  PropType,
+  defineExpose,
+  defineEmits,
+  watch,
+} from 'vue';
 import 'leaflet/dist/leaflet.css';
 import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
 import L from 'leaflet';
@@ -56,9 +65,12 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['bounds-changed']);
+
 const zoom = ref(12);
 const isMounted = ref(false);
 const center = ref<[number, number]>([40.7128, -74.006]); // Default center
+const mapRef = ref(null);
 
 onMounted(() => {
   // By setting this flag in onMounted, we ensure the map component
@@ -79,6 +91,21 @@ onMounted(() => {
     console.error('Geolocation is not supported by this browser.');
   }
 });
+
+const onMapReady = () => {
+  if (mapRef.value) {
+    const map = (mapRef.value as any).leafletObject;
+    map.on('moveend', () => {
+      const bounds = map.getBounds();
+      emit('bounds-changed', {
+        north: bounds.getNorth(),
+        south: bounds.getSouth(),
+        east: bounds.getEast(),
+        west: bounds.getWest(),
+      });
+    });
+  }
+};
 
 const setCenter = (newCenter: [number, number]) => {
   center.value = newCenter;

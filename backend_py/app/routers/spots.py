@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
+from sqlalchemy import func
+from geoalchemy2.functions import ST_MakeEnvelope, ST_Contains
+from typing import List, Optional
 from uuid import UUID
 
 from .. import schemas
@@ -43,13 +45,36 @@ async def create_spot(
 
 
 @router.get("/", response_model=List[schemas.Spot])
-async def get_spots(db: AsyncSession = Depends(get_db), skip: int = 0, limit: int = 100):
+async def get_spots(
+    db: AsyncSession = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100,
+    north: Optional[float] = None,
+    south: Optional[float] = None,
+    east: Optional[float] = None,
+    west: Optional[float] = None,
+):
     """
     Retrieve a list of skate spots.
+    Can be filtered by a bounding box.
     """
     from sqlalchemy.future import select
 
-    result = await db.execute(select(Spot).offset(skip).limit(limit))
+    query = select(Spot)
+
+    if all(coord is not None for coord in [north, south, east, west]):
+        # Ensure coordinates are valid
+        if west > east or south > north:
+            raise HTTPException(status_code=400, detail="Invalid bounding box coordinates")
+
+        # Create a bounding box polygon from the coordinates
+        # Note: PostGIS uses (longitude, latitude) order
+        bounding_box = ST_MakeEnvelope(west, south, east, north, 4326)
+
+        # Filter spots that are contained within the bounding box
+        query = query.where(ST_Contains(bounding_box, Spot.location))
+
+    result = await db.execute(query.offset(skip).limit(limit))
     spots = result.scalars().all()
     return spots
 

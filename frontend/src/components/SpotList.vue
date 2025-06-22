@@ -32,18 +32,26 @@ const handleEdit = (spotId: string) => {
 <template>
   <div>
     <h1 class="text-2xl font-bold mb-4 text-gray-800">Skate Spots</h1>
+    <div class="mb-4">
+      <input
+        type="text"
+        v-model="spotsStore.searchQuery"
+        placeholder="Search spots..."
+        class="w-full px-3 py-2 border rounded-lg"
+      />
+    </div>
     <div v-if="spotsStore.isLoading" class="text-center">
       <p class="text-gray-600">Loading spots...</p>
     </div>
     <div v-else-if="spotsStore.error" class="text-red-500 text-center">
       <p>{{ spotsStore.error }}</p>
     </div>
-    <div v-else-if="spotsStore.spots.length === 0" class="text-center">
+    <div v-else-if="spotsStore.filteredSpots.length === 0" class="text-center">
       <p class="text-gray-600">No spots found.</p>
     </div>
     <ul v-else class="space-y-4">
       <li
-        v-for="spot in spotsStore.spots"
+        v-for="spot in spotsStore.filteredSpots"
         :key="spot.id"
         class="p-4 bg-white border rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
         @click="handleSpotClick(spot)"
