@@ -40,11 +40,11 @@ const filteredSpots = computed(() => {
         class="flex-1 rounded border px-2 py-1 text-sm"
       />
     </div>
-    <div class="flex-1 overflow-y-auto">
+    <div class="flex-1 overflow-y-auto space-y-3">
       <div
         v-for="spot in filteredSpots"
         :key="spot.id"
-        class="mb-2 cursor-pointer rounded hover:bg-gray-100 p-2"
+        class="cursor-pointer bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 hover:bg-gray-50"
         @click="$emit('spot-selected', spot)"
       >
         <div class="font-semibold">{{ spot.name }}</div>
