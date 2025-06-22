@@ -14,19 +14,23 @@ onMounted(() => {
 </script>
 
 <template>
-  <header class="bg-gray-800 text-white p-4 flex justify-between items-center">
-    <h1 class="text-xl">SkateSpot</h1>
-    <div v-if="authStore.isAuthenticated">
-      <span>Welcome, {{ authStore.user?.name }}</span>
-      <BaseButton @click="authStore.logout" class="ml-4">Logout</BaseButton>
-    </div>
-    <div v-else>
-      <BaseButton @click="authStore.login">Login with Google</BaseButton>
-    </div>
-  </header>
-  <main class="relative" style="height: calc(100vh - 64px)">
-    <Map :spots="spotsStore.spots" />
-  </main>
+  <div id="app-container" class="flex flex-col h-screen">
+    <header
+      class="bg-gray-800 text-white p-4 flex justify-between items-center flex-shrink-0"
+    >
+      <h1 class="text-xl">SkateSpot</h1>
+      <div v-if="authStore.isAuthenticated">
+        <span>Welcome, {{ authStore.user?.name }}</span>
+        <BaseButton @click="authStore.logout" class="ml-4">Logout</BaseButton>
+      </div>
+      <div v-else>
+        <BaseButton @click="authStore.login">Login with Google</BaseButton>
+      </div>
+    </header>
+    <main class="flex-grow relative">
+      <Map :spots="spotsStore.spots" />
+    </main>
+  </div>
 </template>
 
 <style>

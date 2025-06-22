@@ -1,7 +1,12 @@
 <template>
   <div class="map-container">
     <div v-if="isMounted" class="map-instance">
-      <l-map ref="map" v-model:zoom="zoom" :center="[40.7128, -74.006]">
+      <l-map
+        ref="map"
+        v-model:zoom="zoom"
+        :center="[40.7128, -74.006]"
+        :zoom-control-position="'bottomright'"
+      >
         <l-tile-layer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           layer-type="base"
@@ -62,14 +67,15 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.map-container,
-.map-instance {
+.map-container {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  height: 100%;
   width: 100%;
+  height: 100%;
+}
+.map-instance {
+  width: 100%;
+  height: 100%;
 }
 </style>
