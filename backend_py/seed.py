@@ -32,26 +32,35 @@ async def seed_data():
         else:
             print(f"User already exists with ID: {user.id}")
 
-        # Check if spot already exists
+        # Remove the old spot if it exists
         spot_result = await session.execute(select(Spot).filter_by(name="Downtown Ledges"))
+        spot = spot_result.scalars().first()
+        if spot:
+            print("Deleting old spot 'Downtown Ledges'...")
+            await session.delete(spot)
+            await session.commit()
+            print("Old spot deleted.")
+
+        # Check if spot already exists
+        spot_result = await session.execute(select(Spot).filter_by(name="Shaw Millennium Park"))
         spot = spot_result.scalars().first()
 
         if not spot:
-            print("Creating a new spot...")
-            # WKT for a point in San Francisco
+            print("Creating a new spot in Calgary...")
+            # Coordinates for Calgary, AB
             new_spot = Spot(
-                name="Downtown Ledges",
-                description="A set of nice ledges downtown.",
-                location='SRID=4326;POINT(-122.4194 37.7749)',
+                name="Shaw Millennium Park",
+                description="A large, well-known skate park in Calgary.",
+                location='SRID=4326;POINT(-114.09 51.05)', # Longitude, Latitude
                 user_id=user.id,
-                photos=[{"url": "https://example.com/ledge_photo.jpg"}]
+                photos=[{"url": "https://example.com/calgary_spot.jpg"}]
             )
             session.add(new_spot)
             await session.commit()
             await session.refresh(new_spot)
             print(f"Spot created with ID: {new_spot.id}")
         else:
-            print(f"Spot 'Downtown Ledges' already exists with ID: {spot.id}")
+            print(f"Spot 'Shaw Millennium Park' already exists with ID: {spot.id}")
 
 
 if __name__ == "__main__":

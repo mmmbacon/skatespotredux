@@ -4,7 +4,7 @@
       <l-map
         ref="map"
         v-model:zoom="zoom"
-        :center="[40.7128, -74.006]"
+        :center="center"
         :zoom-control-position="'bottomright'"
       >
         <l-tile-layer
@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, defineProps, PropType } from 'vue';
+import { ref, onMounted, defineProps, PropType, defineExpose } from 'vue';
 import 'leaflet/dist/leaflet.css';
 import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
 import L from 'leaflet';
@@ -58,11 +58,34 @@ const props = defineProps({
 
 const zoom = ref(12);
 const isMounted = ref(false);
+const center = ref<[number, number]>([40.7128, -74.006]); // Default center
 
 onMounted(() => {
   // By setting this flag in onMounted, we ensure the map component
   // is only rendered on the client, avoiding SSR issues.
   isMounted.value = true;
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        center.value = [position.coords.latitude, position.coords.longitude];
+      },
+      (error) => {
+        console.error("Error getting user's location:", error);
+        // Stick with the default center if there's an error
+      }
+    );
+  } else {
+    console.error('Geolocation is not supported by this browser.');
+  }
+});
+
+const setCenter = (newCenter: [number, number]) => {
+  center.value = newCenter;
+};
+
+defineExpose({
+  setCenter,
 });
 </script>
 

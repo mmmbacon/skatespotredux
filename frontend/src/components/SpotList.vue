@@ -1,16 +1,21 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useSpotsStore } from '@/stores/spots';
+import { onMounted, defineEmits } from 'vue';
+import { useSpotsStore, Spot } from '@/stores/spots';
 import { useAuthStore } from '@/stores/auth';
 import BaseButton from './BaseButton.vue';
 
 const spotsStore = useSpotsStore();
 const authStore = useAuthStore();
+const emit = defineEmits(['focus-spot']);
 
 onMounted(() => {
   // The fetch is already called in App.vue, so this is redundant
   // spotsStore.fetchSpots();
 });
+
+const handleSpotClick = (spot: Spot) => {
+  emit('focus-spot', spot.location.coordinates.slice().reverse());
+};
 
 const handleDelete = async (spotId: string) => {
   if (confirm('Are you sure you want to delete this spot?')) {
@@ -40,7 +45,8 @@ const handleEdit = (spotId: string) => {
       <li
         v-for="spot in spotsStore.spots"
         :key="spot.id"
-        class="p-4 bg-white border rounded-lg shadow-sm"
+        class="p-4 bg-white border rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
+        @click="handleSpotClick(spot)"
       >
         <h2 class="text-xl font-semibold text-gray-900">{{ spot.name }}</h2>
         <p class="text-gray-700">{{ spot.description }}</p>

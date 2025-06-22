@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref } from 'vue';
 import { useSpotsStore } from './stores/spots';
 import { useAuthStore } from './stores/auth';
 import Map from './components/Map.vue';
@@ -8,10 +8,15 @@ import BaseButton from './components/BaseButton.vue';
 
 const authStore = useAuthStore();
 const spotsStore = useSpotsStore();
+const mapRef = ref<InstanceType<typeof Map> | null>(null);
 
-onMounted(() => {
-  spotsStore.fetchSpots();
-});
+spotsStore.fetchSpots();
+
+const handleFocusSpot = (coordinates: [number, number]) => {
+  if (mapRef.value) {
+    mapRef.value.setCenter(coordinates);
+  }
+};
 </script>
 
 <template>
@@ -30,10 +35,10 @@ onMounted(() => {
     </header>
     <div class="flex flex-grow overflow-hidden">
       <aside class="w-80 bg-gray-100 p-4 overflow-y-auto flex-shrink-0">
-        <SpotList />
+        <SpotList @focus-spot="handleFocusSpot" />
       </aside>
       <main class="flex-grow relative">
-        <Map :spots="spotsStore.spots" />
+        <Map ref="mapRef" :spots="spotsStore.spots" />
       </main>
     </div>
   </div>
