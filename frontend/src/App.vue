@@ -31,13 +31,14 @@ function handleSpotSelected(spot: Spot) {
   // Always reference the store's spot object for reactivity
   const storeSpot = spotsStore.spots.find((s) => s.id === spot.id);
   selectedSpot.value = storeSpot || spot;
-  // Center the map on the selected spot
+  // Center the map on the selected spot, offsetting for the left sidebar
   if (mapRef.value && spot.location && spot.location.coordinates) {
-    // coordinates: [lng, lat] -> setCenter expects [lat, lng]
-    mapRef.value.setCenter([
+    // coordinates: [lng, lat] -> panToWithOffset expects [lat, lng]
+    mapRef.value.panToWithOffset(
       spot.location.coordinates[1],
       spot.location.coordinates[0],
-    ]);
+      352 // sidebar width in px
+    );
   }
 }
 

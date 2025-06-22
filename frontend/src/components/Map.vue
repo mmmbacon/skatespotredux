@@ -285,9 +285,22 @@ const setCenter = (newCenter: [number, number]) => {
   center.value = newCenter;
 };
 
+const panToWithOffset = (lat: number, lng: number, offsetX: number) => {
+  const map = (mapRef.value as any)?.leafletObject;
+  if (!map) return;
+  // Convert lat/lng to container point
+  const targetPoint = map.latLngToContainerPoint([lat, lng]);
+  // Offset horizontally (positive offsetX moves pin right, negative moves left)
+  const offsetPoint = L.point(targetPoint.x + offsetX, targetPoint.y);
+  // Convert back to lat/lng
+  const offsetLatLng = map.containerPointToLatLng(offsetPoint);
+  map.panTo(offsetLatLng, { animate: true });
+};
+
 defineExpose({
   setCenter,
   openPopupForSpot,
+  panToWithOffset,
 });
 </script>
 
