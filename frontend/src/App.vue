@@ -119,7 +119,7 @@ const handleMapReady = () => {
   <div class="h-screen flex flex-col">
     <!-- Header -->
     <header
-      class="bg-white shadow px-4 py-2 flex items-center justify-between z-10"
+      class="bg-white shadow-lg px-4 py-2 flex items-center justify-between z-20"
     >
       <h1 class="text-2xl font-bold">
         <span>skatespot</span><span class="text-blue-600">.app</span>
