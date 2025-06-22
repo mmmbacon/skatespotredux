@@ -126,7 +126,7 @@ export const useSpotsStore = defineStore('spots', () => {
   async function addComment(spotId: string, content: string) {
     try {
       const response = await axios.post(
-        `/api/spots/${spotId}/comments/`,
+        `/api/spots/${spotId}/comments`,
         { content },
         { withCredentials: true }
       );
