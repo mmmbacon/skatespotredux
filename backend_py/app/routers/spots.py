@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func
+from sqlalchemy import func, select
+from sqlalchemy.orm import joinedload
+from sqlalchemy.future import select
 from geoalchemy2.functions import ST_MakeEnvelope, ST_Contains
 from typing import List, Optional
 from uuid import UUID
 
 from .. import schemas
 from ..database import get_db
-from ..models import Spot, User
+from ..models import Spot, User, Comment
 from ..routers.auth import get_current_user
 
 router = APIRouter(
@@ -41,7 +43,17 @@ async def create_spot(
     db.add(db_spot)
     await db.commit()
     await db.refresh(db_spot)
-    return db_spot
+    # Eagerly load comments and user for serialization
+    result = await db.execute(
+        select(Spot)
+        .options(
+            joinedload(Spot.user),
+            joinedload(Spot.comments).joinedload(Comment.user)
+        )
+        .where(Spot.id == db_spot.id)
+    )
+    spot_with_comments = result.unique().scalar_one()
+    return spot_with_comments
 
 
 @router.get("/", response_model=List[schemas.Spot])
@@ -58,9 +70,10 @@ async def get_spots(
     Retrieve a list of skate spots.
     Can be filtered by a bounding box.
     """
-    from sqlalchemy.future import select
-
-    query = select(Spot)
+    query = select(Spot).options(
+        joinedload(Spot.user),
+        joinedload(Spot.comments).joinedload(Comment.user)
+    )
 
     if all(coord is not None for coord in [north, south, east, west]):
         # Ensure coordinates are valid
@@ -75,7 +88,7 @@ async def get_spots(
         query = query.where(ST_Contains(bounding_box, Spot.location))
 
     result = await db.execute(query.offset(skip).limit(limit))
-    spots = result.scalars().all()
+    spots = result.scalars().unique().all()
     return spots
 
 
