@@ -3,8 +3,12 @@ version: '3.9'
 
 services:
   postgres:
-    image: postgis/postgis:15-3.3
-    platform: linux/arm64
+    image: bitnami/postgresql:15
+    environment:
+      - POSTGRESQL_USERNAME=skateuser
+      - POSTGRESQL_PASSWORD=skatepassword
+      - POSTGRESQL_DATABASE=skatespot
+      - POSTGRESQL_HOST_AUTH_METHOD=trust
     env_file:
       - ./env/.env.local
     volumes:
@@ -12,17 +16,22 @@ services:
     ports:
       - '5432:5432'
     container_name: skatespot-postgres
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U skateuser -d skatespot']
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     image: skatespot-backend
-    platform: linux/arm64
     build:
       context: ../backend_py
       dockerfile: Dockerfile
     volumes:
       - ../backend_py:/app
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     env_file:
       - ./env/.env.local
     ports:
@@ -31,7 +40,6 @@ services:
 
   frontend:
     build: ../frontend
-    platform: linux/arm64
     depends_on:
       - backend
     ports:
