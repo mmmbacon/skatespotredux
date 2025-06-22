@@ -3,12 +3,11 @@ version: '3.9'
 
 services:
   postgres:
-    image: bitnami/postgresql:15
+    image: postgis/postgis:15-3.4
     environment:
-      - POSTGRESQL_USERNAME=skateuser
-      - POSTGRESQL_PASSWORD=skatepassword
-      - POSTGRESQL_DATABASE=skatespot
-      - POSTGRESQL_HOST_AUTH_METHOD=trust
+      - POSTGRES_USER=skateuser
+      - POSTGRES_PASSWORD=skatepassword
+      - POSTGRES_DB=skatespot
     env_file:
       - ./env/.env.local
     volumes:

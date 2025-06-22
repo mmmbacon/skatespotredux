@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from .config import get_settings
-from .routers import auth
+from .routers import auth, spots
 from .database import Base, engine
 
 app = FastAPI(title="SkateSpot API", version="0.1.0")
@@ -20,14 +20,7 @@ app.add_middleware(
 app.add_middleware(SessionMiddleware, secret_key=get_settings().JWT_SECRET)
 
 app.include_router(auth.router)
-
-# --- database startup -------------------------------------------------------
-
-@app.on_event("startup")
-async def on_startup() -> None:
-    """Create database tables on application startup if they don't exist."""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+app.include_router(spots.router)
 
 @app.get("/health")
 async def health():
@@ -39,4 +32,11 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.getenv("PORT", 3000))
-    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=True) 
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=port,
+        reload=True,
+        reload_dirs=["/app"],
+        reload_excludes=["/app/alembic"],
+    ) 

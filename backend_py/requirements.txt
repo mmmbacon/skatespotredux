@@ -16,4 +16,9 @@ uvloop
 alembic==1.13.2
 itsdangerous==2.2.0
 starlette==0.37.2
-pytest 
+psycopg2-binary
+geoalchemy2
+
+# For testing
+pytest
+httpx 
