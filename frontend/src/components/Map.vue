@@ -18,6 +18,7 @@
         <l-marker
           v-for="spot in spots"
           :key="spot.id"
+          :ref="(el) => setMarkerRef(el, spot.id)"
           :lat-lng="
             [spot.location.coordinates[1], spot.location.coordinates[0]] as [
               number,
@@ -178,6 +179,20 @@ const zoom = ref(12);
 const isMounted = ref(false);
 const center = ref<[number, number]>([51.0447, -114.0719]); // Calgary
 const mapRef = ref(null);
+const markerRefs = ref<Record<string, any>>({});
+
+const setMarkerRef = (el: any, spotId: string) => {
+  if (el) {
+    markerRefs.value[spotId] = el;
+  }
+};
+
+const openPopupForSpot = (spotId: string) => {
+  const marker = markerRefs.value[spotId];
+  if (marker) {
+    marker.leafletObject.openPopup();
+  }
+};
 
 const newSpotName = ref('');
 const newSpotLocation = ref<[number, number] | null>(null);
@@ -274,6 +289,7 @@ const setCenter = (newCenter: [number, number]) => {
 
 defineExpose({
   setCenter,
+  openPopupForSpot,
 });
 </script>
 
