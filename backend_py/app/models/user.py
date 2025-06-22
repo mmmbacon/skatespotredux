@@ -20,4 +20,5 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     last_login = Column(DateTime, default=datetime.utcnow, nullable=False)
     
-    spots = relationship("Spot", back_populates="user", cascade="all, delete-orphan") 
+    spots = relationship("Spot", back_populates="user", cascade="all, delete-orphan")
+    comments = relationship("Comment", back_populates="user", cascade="all, delete-orphan") 

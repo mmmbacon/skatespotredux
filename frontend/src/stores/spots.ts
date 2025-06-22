@@ -2,6 +2,21 @@ import { defineStore } from 'pinia';
 import { ref, readonly, computed } from 'vue';
 import axios from 'axios';
 
+export interface User {
+  id: string;
+  name?: string;
+  avatar_url?: string;
+}
+
+export interface Comment {
+  id: string;
+  content: string;
+  spot_id: string;
+  user_id: string;
+  created_at: string;
+  user: User;
+}
+
 export interface Spot {
   id: string;
   name: string;
@@ -13,6 +28,7 @@ export interface Spot {
   user_id: string;
   created_at: string;
   updated_at?: string;
+  comments?: Comment[];
 }
 
 export interface SpotCreatePayload {
@@ -85,7 +101,7 @@ export const useSpotsStore = defineStore('spots', () => {
 
   async function updateSpot(spotId: string, spotData: SpotUpdatePayload) {
     try {
-      const response = await axios.put(`/api/spots/${spotId}`, spotData);
+      const response = await axios.put(`/api/spots/${spotId}/`, spotData);
       const index = spots.value.findIndex((s) => s.id === spotId);
       if (index !== -1) {
         spots.value[index] = response.data;
@@ -98,10 +114,31 @@ export const useSpotsStore = defineStore('spots', () => {
 
   async function deleteSpot(spotId: string) {
     try {
-      await axios.delete(`/api/spots/${spotId}`);
+      await axios.delete(`/api/spots/${spotId}/`);
       spots.value = spots.value.filter((s) => s.id !== spotId);
     } catch (e: any) {
       console.error('Failed to delete spot', e);
+      throw e;
+    }
+  }
+
+  async function addComment(spotId: string, content: string) {
+    try {
+      const response = await axios.post(
+        `/api/spots/${spotId}/comments/`,
+        { content },
+        { withCredentials: true }
+      );
+      const comment = response.data;
+      const spot = spots.value.find((s) => s.id === spotId);
+      if (spot) {
+        if (!spot.comments) {
+          spot.comments = [];
+        }
+        spot.comments.push(comment);
+      }
+    } catch (e: any) {
+      console.error('Failed to add comment', e);
       throw e;
     }
   }
@@ -116,5 +153,6 @@ export const useSpotsStore = defineStore('spots', () => {
     addSpot,
     updateSpot,
     deleteSpot,
+    addComment,
   };
 });

@@ -96,7 +96,7 @@ async function handleFormSubmit(payload: SpotCreatePayload) {
   if (editingSpot.value) {
     await spotsStore.updateSpot(editingSpot.value.id, payload);
   } else {
-    await spotsStore.createSpot(payload);
+    await spotsStore.addSpot(payload);
   }
   closeForm();
 }

@@ -1,6 +1,8 @@
 from functools import lru_cache
 from pydantic import Field
 from pydantic_settings import BaseSettings
+import os
+import boto3
 
 
 class Settings(BaseSettings):
@@ -16,4 +18,18 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def get_settings() -> Settings:
-    return Settings() 
+    return Settings()
+
+R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID")
+R2_BUCKET = os.getenv("R2_BUCKET")
+R2_ENDPOINT = os.getenv("R2_ENDPOINT")
+R2_TOKEN = os.getenv("R2_TOKEN")
+
+def get_r2_client():
+    return boto3.client(
+        "s3",
+        endpoint_url=R2_ENDPOINT,
+        aws_access_key_id=R2_ACCOUNT_ID,
+        aws_secret_access_key=R2_TOKEN,
+        region_name="auto",
+    ) 

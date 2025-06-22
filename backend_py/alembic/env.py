@@ -18,7 +18,7 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from app.database import Base
-from app.models import User, Spot  # Make sure all models are imported
+from app.models import User, Spot, Comment  # Make sure all models are imported
 
 target_metadata = Base.metadata
 
@@ -26,6 +26,20 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+
+def include_object(object, name, type_, reflected, compare_to):
+    """
+    Exclude PostGIS system tables from Alembic's consideration.
+    """
+    if type_ == "table":
+        # Exclude all tables in the 'tiger' and 'topology' schemas
+        if object.schema in ["tiger", "topology"]:
+            return False
+        # Exclude specific other PostGIS tables
+        if name in ["spatial_ref_sys"] or name.startswith("pg_"):
+            return False
+    return True
 
 
 def run_migrations_offline() -> None:
@@ -46,6 +60,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -53,7 +68,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection):
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        include_object=include_object,
+    )
 
     with context.begin_transaction():
         context.run_migrations()

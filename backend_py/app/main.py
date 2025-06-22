@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from .config import get_settings
-from .routers import auth, spots
+from .routers import auth, spots, comments
 from .database import Base, engine
 
 app = FastAPI(title="SkateSpot API", version="0.1.0")
@@ -19,8 +19,9 @@ app.add_middleware(
 )
 app.add_middleware(SessionMiddleware, secret_key=get_settings().JWT_SECRET)
 
-app.include_router(auth.router)
-app.include_router(spots.router)
+app.include_router(auth.router, prefix="/api")
+app.include_router(spots.router, prefix="/api")
+app.include_router(comments.router, prefix="/api")
 
 @app.get("/health")
 async def health():

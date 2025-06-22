@@ -37,7 +37,8 @@ async def login_via_google(request: Request):
     # In a production environment, you would want to use request.url_for
     # and ensure your proxy is setting the X-Forwarded-Proto and
     # X-Forwarded-Host headers correctly.
-    redirect_uri = "http://localhost:3000/auth/google/callback"
+    # redirect_uri = "http://localhost:3000/auth/google/callback"
+    redirect_uri = request.url_for("google_callback")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
