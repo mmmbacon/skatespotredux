@@ -185,9 +185,9 @@ const handleMapReady = () => {
     </div>
     <!-- Spot Form Modal (only for editing) -->
     <SpotForm
-      v-if="isFormOpen && editingSpot"
       :spot="editingSpot"
-      @submit="handleFormSubmit"
+      :isVisible="isFormOpen && editingSpot"
+      @save="handleFormSubmit"
       @close="closeForm"
     />
   </div>
