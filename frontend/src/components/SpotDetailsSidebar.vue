@@ -1,8 +1,10 @@
 <template>
   <div
-    class="bg-white z-10 flex flex-col border-l border-gray-200 h-full w-full"
+    class="bg-white dark:bg-gray-800 z-10 flex flex-col border-l border-gray-200 dark:border-gray-700 h-full w-full transition-colors"
   >
-    <div class="flex justify-between items-center p-4 border-b">
+    <div
+      class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700"
+    >
       <div class="flex items-center">
         <!-- Voting controls: vertical stack -->
         <div class="flex flex-col items-center mr-4">
@@ -15,16 +17,18 @@
             <span
               :class="[
                 spot.my_vote === 1 && authStore.isAuthenticated
-                  ? 'text-blue-600'
+                  ? 'text-blue-600 dark:text-blue-400'
                   : '',
                 !authStore.isAuthenticated
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'cursor-pointer',
+                  ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                  : 'cursor-pointer text-gray-600 dark:text-gray-300',
               ]"
               >▲</span
             >
           </button>
-          <span class="font-semibold">{{ spot.score }}</span>
+          <span class="font-semibold text-gray-900 dark:text-white">{{
+            spot.score
+          }}</span>
           <button
             :disabled="!authStore.isAuthenticated"
             @click="() => handleVote(-1)"
@@ -34,11 +38,11 @@
             <span
               :class="[
                 spot.my_vote === -1 && authStore.isAuthenticated
-                  ? 'text-red-600'
+                  ? 'text-red-600 dark:text-red-400'
                   : '',
                 !authStore.isAuthenticated
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'cursor-pointer',
+                  ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                  : 'cursor-pointer text-gray-600 dark:text-gray-300',
               ]"
               >▼</span
             >
@@ -46,8 +50,12 @@
         </div>
         <!-- Spot title -->
         <div class="flex items-center">
-          <div class="w-12 h-12 bg-gray-200 rounded mr-3 flex-shrink-0"></div>
-          <h2 class="text-xl font-bold">{{ spot.name }}</h2>
+          <div
+            class="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded mr-3 flex-shrink-0"
+          ></div>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+            {{ spot.name }}
+          </h2>
         </div>
       </div>
       <div class="flex items-center space-x-2">
@@ -64,7 +72,7 @@
         </template>
         <button
           @click="showQRModal = true"
-          class="text-gray-500 hover:text-gray-800 p-2 rounded hover:bg-gray-100 transition-colors relative group"
+          class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative group"
           title="Generate a QR code"
         >
           <Icon icon="mdi:qrcode" class="w-6 h-6" />
@@ -80,21 +88,21 @@
         </button>
         <button
           @click="$emit('close')"
-          class="text-gray-500 hover:text-gray-800 text-2xl ml-2"
+          class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-2xl ml-2 transition-colors"
         >
           &times;
         </button>
       </div>
     </div>
     <div class="p-4 flex-1 overflow-y-auto">
-      <p v-if="spot.description" class="mb-4 text-gray-700">
+      <p v-if="spot.description" class="mb-4 text-gray-700 dark:text-gray-300">
         {{ spot.description }}
       </p>
-      <p v-else class="mb-4 text-gray-400 italic">
+      <p v-else class="mb-4 text-gray-400 dark:text-gray-500 italic">
         No description available for this spot.
       </p>
-      <hr class="mb-4" />
-      <h4 class="font-semibold mb-2">Comments</h4>
+      <hr class="mb-4 border-gray-200 dark:border-gray-700" />
+      <h4 class="font-semibold mb-2 text-gray-900 dark:text-white">Comments</h4>
       <CommentList :comments="spot.comments || []" />
       <CommentForm @submit-comment="handleAddComment" />
     </div>

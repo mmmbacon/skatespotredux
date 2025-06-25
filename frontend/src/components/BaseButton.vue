@@ -19,14 +19,14 @@ const baseClasses =
 const variantClasses = computed(() => {
   switch (props.variant) {
     case 'secondary':
-      return 'bg-gray-200 text-gray-800 hover:bg-gray-300';
+      return 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600';
     case 'danger':
       return 'bg-red-600 text-white hover:bg-red-700';
     case 'outline':
-      return 'border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground';
+      return 'border border-gray-300 dark:border-gray-600 bg-transparent shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white';
     case 'default':
     default:
-      return 'bg-black text-white hover:bg-black/90';
+      return 'bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-gray-100';
   }
 });
 

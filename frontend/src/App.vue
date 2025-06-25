@@ -6,14 +6,17 @@ import {
   type SpotCreatePayload,
 } from './stores/spots';
 import { useAuthStore } from './stores/auth';
+import { useThemeStore } from '@/stores/theme';
 import Map from './components/Map.vue';
 import SpotList from './components/SpotList.vue';
 import SpotForm from './components/SpotForm.vue';
 import BaseButton from './components/BaseButton.vue';
 import SpotDetailsSidebar from './components/SpotDetailsSidebar.vue';
+import { Icon } from '@iconify/vue';
 
 const authStore = useAuthStore();
 const spotsStore = useSpotsStore();
+const themeStore = useThemeStore();
 const mapRef = ref<InstanceType<typeof Map> | null>(null);
 
 // State for SpotForm
@@ -113,18 +116,39 @@ const handleMapReady = () => {
     });
   }
 };
+
+onMounted(() => {
+  themeStore.initializeTheme();
+});
 </script>
 
 <template>
-  <div class="h-screen flex flex-col">
+  <div
+    class="h-screen flex flex-col bg-white dark:bg-gray-900 transition-colors"
+  >
     <!-- Header -->
     <header
-      class="bg-white shadow-lg px-4 py-2 flex items-center justify-between z-50"
+      class="bg-white dark:bg-gray-800 shadow-lg px-4 py-2 flex items-center justify-between z-50 transition-colors"
     >
-      <h1 class="text-2xl font-bold">
-        <span>skatespot</span><span class="text-blue-600">.app</span>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+        <span>skatespot</span
+        ><span class="text-blue-600 dark:text-blue-400">.app</span>
       </h1>
-      <div>
+      <div class="flex items-center space-x-4">
+        <button
+          @click="themeStore.toggleTheme"
+          class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          :title="
+            themeStore.isDark ? 'Switch to light mode' : 'Switch to dark mode'
+          "
+        >
+          <Icon
+            :icon="
+              themeStore.isDark ? 'mdi:weather-sunny' : 'mdi:weather-night'
+            "
+            class="w-5 h-5 text-gray-600 dark:text-gray-300"
+          />
+        </button>
         <BaseButton v-if="!authStore.isAuthenticated" @click="authStore.login"
           >Login with Google</BaseButton
         >
@@ -135,7 +159,9 @@ const handleMapReady = () => {
             class="w-8 h-8 rounded-full"
             v-if="authStore.user?.avatar_url"
           />
-          <span>{{ authStore.user?.name || authStore.user?.email }}</span>
+          <span class="text-gray-900 dark:text-white">{{
+            authStore.user?.name || authStore.user?.email
+          }}</span>
           <BaseButton @click="authStore.logout" variant="secondary"
             >Logout</BaseButton
           >
@@ -146,10 +172,12 @@ const handleMapReady = () => {
     <div class="flex flex-1 min-h-0">
       <!-- Left Sidebar -->
       <div
-        class="h-full bg-white border-r border-gray-200 w-[352px] flex-shrink-0 shadow-xl z-20"
+        class="h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 w-[352px] flex-shrink-0 shadow-xl z-20 transition-colors"
       >
         <div class="flex items-center justify-between px-4 pt-4 pb-0">
-          <h2 class="text-2xl font-bold">Spots</h2>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+            Spots
+          </h2>
           <BaseButton
             v-if="authStore.isAuthenticated"
             @click="handleStartCreating"
@@ -179,7 +207,7 @@ const handleMapReady = () => {
       <!-- Right Sidebar (in flex flow) -->
       <div
         v-if="selectedSpotFromStore"
-        class="h-full w-96 bg-white shadow-xl z-20 flex flex-col border-l border-gray-200"
+        class="h-full w-96 bg-white dark:bg-gray-800 shadow-xl z-20 flex flex-col border-l border-gray-200 dark:border-gray-700 transition-colors"
       >
         <SpotDetailsSidebar
           :spot="selectedSpotFromStore"
