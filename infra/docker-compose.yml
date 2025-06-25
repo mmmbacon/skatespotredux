@@ -48,6 +48,8 @@ services:
     ports:
       - '5173:5173'
     container_name: skatespot-frontend
+    environment:
+      - VITE_BACKEND_URL=http://backend:3000
     command: pnpm run dev --host
 
 volumes:
