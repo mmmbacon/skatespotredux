@@ -69,9 +69,6 @@ const filteredSpots = computed(() => {
             </div>
           </div>
         </div>
-        <div v-if="spot.description" class="text-xs text-gray-500">
-          {{ spot.description }}
-        </div>
       </div>
     </div>
   </div>
