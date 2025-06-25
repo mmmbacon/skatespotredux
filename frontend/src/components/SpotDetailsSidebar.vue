@@ -74,7 +74,7 @@
       <p v-if="spot.description" class="mb-4 text-gray-700">
         {{ spot.description }}
       </p>
-      <p v-else class="mb-4 text-gray-500 italic">
+      <p v-else class="mb-4 text-gray-400 italic">
         No description available for this spot.
       </p>
       <hr class="mb-4" />
