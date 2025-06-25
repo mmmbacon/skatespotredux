@@ -146,7 +146,7 @@ const handleMapReady = () => {
     <div class="flex flex-1 min-h-0">
       <!-- Left Sidebar -->
       <div
-        class="h-full bg-gray-50 border-r border-gray-200 w-[352px] flex-shrink-0 shadow-xl z-20"
+        class="h-full bg-white border-r border-gray-200 w-[352px] flex-shrink-0 shadow-xl z-20"
       >
         <div class="flex items-center justify-between px-4 pt-4 pb-2">
           <h2 class="text-2xl font-bold">Spots</h2>

@@ -26,15 +26,24 @@
             ]
           "
           @click="$emit('spot-selected', spot)"
-          :icon="props.activeSpotId === spot.id ? redIcon : undefined"
+          :icon="
+            String(props.activeSpotId) === String(spot.id)
+              ? blueIcon
+              : yellowIcon
+          "
+          :class="
+            String(props.activeSpotId) === String(spot.id)
+              ? 'selected-marker'
+              : ''
+          "
         >
           <l-tooltip
             :direction="'top'"
             :offset="[0, -10]"
             :sticky="false"
-            :permanent="props.activeSpotId === spot.id"
+            :permanent="String(props.activeSpotId) === String(spot.id)"
             :key="
-              props.activeSpotId === spot.id
+              String(props.activeSpotId) === String(spot.id)
                 ? 'active-tooltip'
                 : 'tooltip-' + spot.id
             "
@@ -62,7 +71,7 @@
           :lat-lng="newSpotLocation"
           :draggable="true"
           @dragend="handleNewMarkerDrag"
-          :icon="redIcon"
+          :icon="yellowIcon"
         >
           <l-popup :close-on-click="false" :close-button="false">
             <div class="w-48">
@@ -154,6 +163,17 @@ const blueIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
+const yellowIcon = new L.Icon({
+  iconUrl:
+    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
 const spotsStore = useSpotsStore();
 const toast = useToast();
 
@@ -173,7 +193,7 @@ const props = defineProps({
     default: false,
   },
   activeSpotId: {
-    type: String,
+    type: [String, Number],
     default: null,
   },
 });
@@ -371,5 +391,14 @@ defineExpose({
 
 :deep(.leaflet-tooltip-top:before) {
   border-top-color: #ccc;
+}
+
+/* Ensure selected marker is on top */
+:deep(.selected-marker) {
+  z-index: 1001 !important;
+}
+
+:deep(.selected-marker .leaflet-marker-icon) {
+  z-index: 1001 !important;
 }
 </style>

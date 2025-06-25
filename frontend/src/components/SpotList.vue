@@ -32,8 +32,8 @@ const filteredSpots = computed(() => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full p-4">
-    <div class="flex items-center mb-2">
+  <div class="flex flex-col h-full pt-4 pb-4">
+    <div class="flex items-center mb-2 ml-4 mr-4">
       <input
         v-model="search"
         type="text"
@@ -41,15 +41,29 @@ const filteredSpots = computed(() => {
         class="flex-1 rounded border px-2 py-1 text-sm"
       />
     </div>
-    <div class="flex-1 overflow-y-auto space-y-3">
+    <div class="flex-1 overflow-y-auto space-y-0">
       <div
         v-for="spot in filteredSpots"
         :key="spot.id"
-        class="cursor-pointer bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 hover:bg-gray-50"
-        :class="spot.id === selectedSpotId ? 'border-blue-600 border-2' : ''"
+        class="cursor-pointer p-3 hover:bg-gray-50 transition-colors border-b border-gray-100 border-t border-gray-100"
+        :class="
+          spot.id === selectedSpotId
+            ? 'bg-gray-100 border-l-4 border-blue-600'
+            : 'border-l-4 border-transparent'
+        "
+        :style="
+          spot.id === selectedSpotId
+            ? 'border-left: 4px solid #2563eb;'
+            : 'border-left: 4px solid transparent;'
+        "
         @click="$emit('spot-selected', spot)"
       >
-        <div class="font-semibold">{{ spot.name }}</div>
+        <div class="flex items-center justify-between">
+          <div class="font-semibold">{{ spot.name }}</div>
+          <span class="font-bold text-blue-600 text-sm w-8 text-right pr-2">{{
+            spot.score
+          }}</span>
+        </div>
         <div v-if="spot.description" class="text-xs text-gray-500">
           {{ spot.description }}
         </div>
