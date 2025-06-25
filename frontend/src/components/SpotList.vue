@@ -61,7 +61,7 @@ const filteredSpots = computed(() => {
         <div class="flex items-center justify-between">
           <div class="flex items-center">
             <div class="w-8 h-8 bg-gray-200 rounded mr-3 flex-shrink-0"></div>
-            <div class="font-semibold">{{ spot.name }}</div>
+            <div class="font-medium">{{ spot.name }}</div>
           </div>
           <div class="flex items-center text-sm w-20 pr-4">
             <div class="text-right flex-1">
