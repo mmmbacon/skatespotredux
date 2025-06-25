@@ -13,6 +13,9 @@ const pinia = createPinia();
 app.use(pinia);
 app.use(Toast);
 
+// Configure axios base URL
+axios.defaults.baseURL = '/';
+
 // Use the auth store outside of a component
 const authStore = useAuthStore(pinia);
 

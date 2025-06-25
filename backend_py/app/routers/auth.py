@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, Request, HTTPException, status
+from fastapi import APIRouter, Depends, Request, HTTPException, status, Security
 from fastapi.responses import RedirectResponse, JSONResponse
 from authlib.integrations.starlette_client import OAuth
 from jose import jwt
 from jose import JWTError
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, HTTPAuthorizationCredentials, HTTPBearer
 from datetime import datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,6 +29,8 @@ oauth.register(
 
 # OAuth2 bearer for JWT issued by our backend
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/google/login")
+
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 @router.get("/login")
@@ -128,4 +130,25 @@ async def get_me(current_user: User = Depends(get_current_user)):
         "avatar_url": current_user.avatar_url,
         "created_at": current_user.created_at.isoformat(),
         "last_login": current_user.last_login.isoformat(),
-    } 
+    }
+
+
+async def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials = Security(bearer_scheme),
+    db: AsyncSession = Depends(get_db),
+):
+    if credentials is None:
+        return None
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
+        user_id = payload.get("sub")
+        if user_id is None:
+            return None
+        user_uuid = uuid.UUID(user_id)
+    except (JWTError, ValueError):
+        return None
+
+    result = await db.execute(select(User).where(User.id == user_uuid))
+    user: User | None = result.scalars().first()
+    return user 

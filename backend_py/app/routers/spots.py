@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 from .. import schemas
 from ..database import get_db
 from ..models import Spot, User, Comment, Vote
-from ..routers.auth import get_current_user
+from ..routers.auth import get_current_user, get_current_user_optional
 
 router = APIRouter(
     prefix="/spots",
@@ -61,7 +61,7 @@ async def create_spot(
 @router.get("/", response_model=List[schemas.Spot])
 async def get_spots(
     db: AsyncSession = Depends(get_db),
-    current_user: User | None = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user_optional),
     skip: int = 0,
     limit: int = 100,
     north: Optional[float] = None,

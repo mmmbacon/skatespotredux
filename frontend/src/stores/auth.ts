@@ -27,13 +27,9 @@ export const useAuthStore = defineStore('auth', () => {
   async function fetchUser() {
     if (!token.value) return;
     try {
-      const { data } = await axios.get(
-        'http://localhost:3000/api/auth/google/me',
-        {
-          headers: { Authorization: `Bearer ${token.value}` },
-          withCredentials: true,
-        }
-      );
+      const { data } = await axios.get('/api/auth/google/me', {
+        withCredentials: true,
+      });
       user.value = data;
     } catch (err) {
       console.error('Failed to fetch current user', err);
@@ -42,7 +38,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function login() {
-    window.location.href = 'http://localhost:3000/api/auth/google/login';
+    window.location.href = '/api/auth/google/login';
   }
 
   function logout() {
