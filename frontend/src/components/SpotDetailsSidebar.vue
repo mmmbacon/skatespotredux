@@ -45,7 +45,10 @@
           </button>
         </div>
         <!-- Spot title -->
-        <h2 class="text-xl font-bold">{{ spot.name }}</h2>
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-gray-200 rounded mr-3 flex-shrink-0"></div>
+          <h2 class="text-xl font-bold">{{ spot.name }}</h2>
+        </div>
       </div>
       <div class="flex items-center space-x-2">
         <template v-if="canEdit">
