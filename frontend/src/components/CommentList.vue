@@ -3,6 +3,24 @@ import type { PropType } from 'vue';
 import type { Comment } from '@/stores/spots';
 import axios from 'axios';
 
+function timeAgo(dateString: string): string {
+  const now = new Date();
+  const date = new Date(dateString);
+  const diff = Math.floor((now.getTime() - date.getTime()) / 1000); // seconds
+  if (diff < 60) {
+    return `${diff} second${diff === 1 ? '' : 's'} ago`;
+  } else if (diff < 3600) {
+    const mins = Math.floor(diff / 60);
+    return `${mins} minute${mins === 1 ? '' : 's'} ago`;
+  } else if (diff < 86400) {
+    const hours = Math.floor(diff / 3600);
+    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  } else {
+    const days = Math.floor(diff / 86400);
+    return `${days} day${days === 1 ? '' : 's'} ago`;
+  }
+}
+
 defineProps({
   comments: {
     type: Array as PropType<Comment[]>,
@@ -32,7 +50,7 @@ defineProps({
         <p class="font-semibold">{{ comment.user.name }}</p>
         <p class="text-gray-700">{{ comment.content }}</p>
         <p class="text-xs text-gray-500 mt-1">
-          {{ new Date(comment.created_at).toLocaleString() }}
+          {{ timeAgo(comment.created_at) }}
         </p>
       </div>
     </div>

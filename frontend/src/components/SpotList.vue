@@ -9,6 +9,7 @@ const spotsStore = useSpotsStore();
 const authStore = useAuthStore();
 const emit = defineEmits(['spot-selected', 'start-creating']);
 const search = ref('');
+const props = defineProps<{ selectedSpotId?: number }>();
 
 onMounted(() => {
   // The fetch is already called in App.vue, so this is redundant
@@ -45,6 +46,7 @@ const filteredSpots = computed(() => {
         v-for="spot in filteredSpots"
         :key="spot.id"
         class="cursor-pointer bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 hover:bg-gray-50"
+        :class="spot.id === selectedSpotId ? 'border-blue-600 border-2' : ''"
         @click="$emit('spot-selected', spot)"
       >
         <div class="font-semibold">{{ spot.name }}</div>

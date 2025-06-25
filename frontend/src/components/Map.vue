@@ -17,7 +17,7 @@
         <!-- Loop through spots and create markers -->
         <l-marker
           v-for="spot in spots"
-          :key="spot.id"
+          :key="spot.id + (props.activeSpotId === spot.id ? '-active' : '')"
           :ref="(el) => setMarkerRef(el, spot.id)"
           :lat-lng="
             [spot.location.coordinates[1], spot.location.coordinates[0]] as [
@@ -26,10 +26,22 @@
             ]
           "
           @click="$emit('spot-selected', spot)"
+          :icon="props.activeSpotId === spot.id ? redIcon : undefined"
         >
-          <l-tooltip :direction="'top'" :offset="[0, -10]" :sticky="false">
+          <l-tooltip
+            :direction="'top'"
+            :offset="[0, -10]"
+            :sticky="false"
+            :permanent="props.activeSpotId === spot.id"
+            :key="
+              props.activeSpotId === spot.id
+                ? 'active-tooltip'
+                : 'tooltip-' + spot.id
+            "
+            class="spot-tooltip"
+          >
             <div class="flex items-center space-x-2">
-              <span class="font-bold text-blue-700 mr-1">{{ spot.score }}</span>
+              <span class="font-bold text-blue-600 mr-1">{{ spot.score }}</span>
               <span class="font-semibold">{{ spot.name }}</span>
             </div>
           </l-tooltip>
@@ -131,6 +143,17 @@ const redIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
+const blueIcon = new L.Icon({
+  iconUrl:
+    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
 const spotsStore = useSpotsStore();
 const toast = useToast();
 
@@ -148,6 +171,10 @@ const props = defineProps({
   isCreating: {
     type: Boolean,
     default: false,
+  },
+  activeSpotId: {
+    type: String,
+    default: null,
   },
 });
 
@@ -324,5 +351,25 @@ defineExpose({
   width: 100%;
   height: 100%;
   z-index: 0;
+}
+
+/* Ensure tooltips are visible above other elements */
+:deep(.spot-tooltip) {
+  z-index: 1000 !important;
+}
+
+:deep(.leaflet-tooltip) {
+  z-index: 1000 !important;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  padding: 4px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+:deep(.leaflet-tooltip-top:before) {
+  border-top-color: #ccc;
 }
 </style>

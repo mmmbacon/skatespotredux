@@ -160,6 +160,7 @@ const handleMapReady = () => {
         <SpotList
           @start-creating="handleStartCreating"
           @spot-selected="handleSpotSelected"
+          :selectedSpotId="selectedSpotFromStore?.id"
         />
       </div>
       <!-- Map -->
@@ -168,6 +169,7 @@ const handleMapReady = () => {
           ref="mapRef"
           :spots="spotsStore.spots"
           :isCreating="isCreating"
+          :activeSpotId="selectedSpotFromStore?.id"
           @bounds-changed="handleBoundsChanged"
           @spot-selected="handleSpotSelected"
           @ready="handleMapReady"
