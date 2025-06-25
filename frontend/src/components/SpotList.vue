@@ -32,7 +32,7 @@ const filteredSpots = computed(() => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full pt-4 pb-4">
+  <div class="flex flex-col h-full pt-2 pb-4">
     <div class="flex items-center mb-2 ml-4 mr-4">
       <input
         v-model="search"
