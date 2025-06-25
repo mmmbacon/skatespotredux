@@ -3,23 +3,49 @@
     class="bg-white z-10 flex flex-col border-l border-gray-200 h-full w-full"
   >
     <div class="flex justify-between items-center p-4 border-b">
-      <h2 class="text-xl font-bold">{{ spot.name }}</h2>
-      <div class="flex items-center space-x-1 mr-4">
-        <button
-          v-if="authStore.isAuthenticated"
-          @click="handleVote(1)"
-          class="focus:outline-none"
-        >
-          <span :class="{ 'text-blue-600': spot.my_vote === 1 }">▲</span>
-        </button>
-        <span>{{ spot.score }}</span>
-        <button
-          v-if="authStore.isAuthenticated"
-          @click="handleVote(-1)"
-          class="focus:outline-none"
-        >
-          <span :class="{ 'text-red-600': spot.my_vote === -1 }">▼</span>
-        </button>
+      <div class="flex items-center">
+        <!-- Voting controls: vertical stack -->
+        <div class="flex flex-col items-center mr-4">
+          <button
+            :disabled="!authStore.isAuthenticated"
+            @click="() => handleVote(1)"
+            class="focus:outline-none"
+            :title="!authStore.isAuthenticated ? 'Log in to vote' : ''"
+          >
+            <span
+              :class="[
+                spot.my_vote === 1 && authStore.isAuthenticated
+                  ? 'text-blue-600'
+                  : '',
+                !authStore.isAuthenticated
+                  ? 'text-gray-400 cursor-not-allowed'
+                  : 'cursor-pointer',
+              ]"
+              >▲</span
+            >
+          </button>
+          <span class="font-semibold">{{ spot.score }}</span>
+          <button
+            :disabled="!authStore.isAuthenticated"
+            @click="() => handleVote(-1)"
+            class="focus:outline-none"
+            :title="!authStore.isAuthenticated ? 'Log in to vote' : ''"
+          >
+            <span
+              :class="[
+                spot.my_vote === -1 && authStore.isAuthenticated
+                  ? 'text-red-600'
+                  : '',
+                !authStore.isAuthenticated
+                  ? 'text-gray-400 cursor-not-allowed'
+                  : 'cursor-pointer',
+              ]"
+              >▼</span
+            >
+          </button>
+        </div>
+        <!-- Spot title -->
+        <h2 class="text-xl font-bold">{{ spot.name }}</h2>
       </div>
       <div class="flex items-center space-x-2">
         <template v-if="canEdit">
@@ -50,14 +76,20 @@
       <CommentList :comments="spot.comments || []" />
       <CommentForm @submit-comment="handleAddComment" />
     </div>
+    <LoginPromptModal
+      v-if="showLoginPrompt"
+      @close="showLoginPrompt = false"
+      @login="handleLogin"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, computed } from 'vue';
+import { ref, defineProps, defineEmits, computed } from 'vue';
 import BaseButton from './BaseButton.vue';
 import CommentList from './CommentList.vue';
 import CommentForm from './CommentForm.vue';
+import LoginPromptModal from './LoginPromptModal.vue';
 import { useSpotsStore, type Spot } from '@/stores/spots';
 import { useAuthStore } from '@/stores/auth';
 
@@ -65,6 +97,7 @@ const props = defineProps<{ spot: Spot }>();
 const emit = defineEmits(['close', 'edit-spot']);
 const spotsStore = useSpotsStore();
 const authStore = useAuthStore();
+const showLoginPrompt = ref(false);
 
 const canEdit = computed(() => {
   return (
@@ -87,12 +120,20 @@ const handleAddComment = async (content: string) => {
 };
 
 const handleVote = async (value: 1 | -1) => {
-  if (!authStore.isAuthenticated) return;
+  if (!authStore.isAuthenticated) {
+    showLoginPrompt.value = true;
+    return;
+  }
   if (props.spot.my_vote === value) {
     await spotsStore.clearVote(props.spot.id);
   } else {
     await spotsStore.voteSpot(props.spot.id, value);
   }
+};
+
+const handleLogin = () => {
+  showLoginPrompt.value = false;
+  authStore.login();
 };
 </script>
 
