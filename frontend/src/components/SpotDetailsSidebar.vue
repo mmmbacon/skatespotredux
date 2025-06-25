@@ -4,6 +4,23 @@
   >
     <div class="flex justify-between items-center p-4 border-b">
       <h2 class="text-xl font-bold">{{ spot.name }}</h2>
+      <div class="flex items-center space-x-1 mr-4">
+        <button
+          v-if="authStore.isAuthenticated"
+          @click="handleVote(1)"
+          class="focus:outline-none"
+        >
+          <span :class="{ 'text-blue-600': spot.my_vote === 1 }">▲</span>
+        </button>
+        <span>{{ spot.score }}</span>
+        <button
+          v-if="authStore.isAuthenticated"
+          @click="handleVote(-1)"
+          class="focus:outline-none"
+        >
+          <span :class="{ 'text-red-600': spot.my_vote === -1 }">▼</span>
+        </button>
+      </div>
       <div class="flex items-center space-x-2">
         <template v-if="canEdit">
           <BaseButton
@@ -67,6 +84,15 @@ const handleDelete = async () => {
 
 const handleAddComment = async (content: string) => {
   await spotsStore.addComment(props.spot.id, content);
+};
+
+const handleVote = async (value: 1 | -1) => {
+  if (!authStore.isAuthenticated) return;
+  if (props.spot.my_vote === value) {
+    await spotsStore.clearVote(props.spot.id);
+  } else {
+    await spotsStore.voteSpot(props.spot.id, value);
+  }
 };
 </script>
 

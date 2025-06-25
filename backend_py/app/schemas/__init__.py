@@ -1,6 +1,7 @@
 from .spot import Spot, SpotCreate, SpotUpdate, SpotBase
 from .comment import Comment, CommentCreate
 from .user import UserCreate, UserUpdate, UserBase, UserPublic
+from .vote import Vote, VoteCreate
 
 __all__ = [
     "UserCreate",
@@ -13,6 +14,8 @@ __all__ = [
     "SpotBase",
     "Comment",
     "CommentCreate",
+    "Vote",
+    "VoteCreate",
 ]
 
 UserPublic.model_rebuild()

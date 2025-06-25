@@ -2,4 +2,5 @@
 
 from .user import User
 from .spot import Spot
-from .comment import Comment 
+from .comment import Comment
+from .vote import Vote 

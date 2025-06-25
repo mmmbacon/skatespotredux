@@ -37,6 +37,8 @@ class Spot(SpotBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     comments: List[Comment] = []
+    score: int = 0
+    my_vote: int | None = None
 
     @field_validator("location", mode="before")
     def validate_location(cls, v: Any) -> Any:

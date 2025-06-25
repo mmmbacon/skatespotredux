@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 
 from .. import schemas
 from ..database import get_db
-from ..models import Spot, User, Comment
+from ..models import Spot, User, Comment, Vote
 from ..routers.auth import get_current_user
 
 router = APIRouter(
@@ -61,6 +61,7 @@ async def create_spot(
 @router.get("/", response_model=List[schemas.Spot])
 async def get_spots(
     db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_current_user),
     skip: int = 0,
     limit: int = 100,
     north: Optional[float] = None,
@@ -91,6 +92,23 @@ async def get_spots(
 
     result = await db.execute(query.offset(skip).limit(limit))
     spots = result.scalars().unique().all()
+
+    # Attach vote info
+    user_id = current_user.id if current_user else None
+
+    for spot in spots:
+        vote_result = await db.execute(
+            select(func.coalesce(func.sum(Vote.value), 0)).where(Vote.spot_id == spot.id)
+        )
+        spot.score = vote_result.scalar() or 0
+
+        if user_id:
+            my_vote_result = await db.execute(
+                select(Vote.value).where(Vote.spot_id == spot.id, Vote.user_id == user_id)
+            )
+            spot.my_vote = my_vote_result.scalar()
+        else:
+            spot.my_vote = None
     return spots
 
 
@@ -169,4 +187,59 @@ def create_presigned_url(
         ExpiresIn=600,  # 10 minutes
     )
     public_url = f"https://{R2_BUCKET}.{R2_ENDPOINT.replace('https://', '')}/{filename}"
-    return JSONResponse({"url": url, "public_url": public_url}) 
+    return JSONResponse({"url": url, "public_url": public_url})
+
+
+# ----------------- Voting --------------------
+
+
+@router.post("/{spot_id}/vote", response_model=schemas.Spot)
+async def vote_spot(
+    spot_id: UUID,
+    vote: schemas.VoteCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Create or update a vote for a spot."""
+    if vote.value not in (1, -1):
+        raise HTTPException(status_code=400, detail="value must be 1 or -1")
+
+    db_vote = await db.execute(
+        select(Vote).where(Vote.spot_id == spot_id, Vote.user_id == current_user.id)
+    )
+    db_vote = db_vote.scalars().first()
+
+    if db_vote:
+        db_vote.value = vote.value
+    else:
+        db_vote = Vote(spot_id=spot_id, user_id=current_user.id, value=vote.value)
+        db.add(db_vote)
+
+    await db.commit()
+
+    # return updated spot with score
+    updated_spot = await db.get(Spot, spot_id)
+    await db.refresh(updated_spot)
+    score_result = await db.execute(select(func.coalesce(func.sum(Vote.value), 0)).where(Vote.spot_id == spot_id))
+    updated_spot.score = score_result.scalar() or 0
+    updated_spot.my_vote = vote.value
+    return updated_spot
+
+
+@router.delete("/{spot_id}/vote", response_model=schemas.Spot)
+async def remove_vote(
+    spot_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    res = await db.execute(select(Vote).where(Vote.spot_id == spot_id, Vote.user_id == current_user.id))
+    vote = res.scalars().first()
+    if vote:
+        await db.delete(vote)
+        await db.commit()
+
+    updated_spot = await db.get(Spot, spot_id)
+    score_result = await db.execute(select(func.coalesce(func.sum(Vote.value), 0)).where(Vote.spot_id == spot_id))
+    updated_spot.score = score_result.scalar() or 0
+    updated_spot.my_vote = None
+    return updated_spot 

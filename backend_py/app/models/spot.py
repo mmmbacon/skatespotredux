@@ -32,6 +32,7 @@ class Spot(Base):
     user = relationship("User", back_populates="spots")
 
     comments = relationship("Comment", back_populates="spot", cascade="all, delete-orphan")
+    votes = relationship("Vote", back_populates="spot", cascade="all, delete-orphan")
 
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False) 

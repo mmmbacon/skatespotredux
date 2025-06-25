@@ -30,6 +30,8 @@ export interface Spot {
   created_at: string;
   updated_at?: string;
   comments?: Comment[];
+  score: number;
+  my_vote?: number | null;
 }
 
 export interface SpotCreatePayload {
@@ -144,6 +146,40 @@ export const useSpotsStore = defineStore('spots', () => {
     }
   }
 
+  /* --- Voting --- */
+  async function voteSpot(spotId: string, value: 1 | -1) {
+    try {
+      const response = await axios.post(
+        `/api/spots/${spotId}/vote`,
+        { value },
+        {
+          withCredentials: true,
+        }
+      );
+      updateSpotFromServer(response.data);
+    } catch (e) {
+      console.error('Failed to vote', e);
+    }
+  }
+
+  async function clearVote(spotId: string) {
+    try {
+      const response = await axios.delete(`/api/spots/${spotId}/vote`, {
+        withCredentials: true,
+      });
+      updateSpotFromServer(response.data);
+    } catch (e) {
+      console.error('Failed to clear vote', e);
+    }
+  }
+
+  function updateSpotFromServer(serverSpot: Spot) {
+    const idx = spots.value.findIndex((s) => s.id === serverSpot.id);
+    if (idx !== -1) {
+      spots.value[idx] = serverSpot;
+    }
+  }
+
   return {
     spots,
     filteredSpots,
@@ -155,5 +191,7 @@ export const useSpotsStore = defineStore('spots', () => {
     updateSpot,
     deleteSpot,
     addComment,
+    voteSpot,
+    clearVote,
   };
 });
