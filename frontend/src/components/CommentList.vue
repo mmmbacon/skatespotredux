@@ -32,7 +32,7 @@ defineProps({
 
 <template>
   <div class="space-y-4">
-    <div v-if="comments.length === 0" class="text-gray-500">
+    <div v-if="comments.length === 0" class="text-gray-500 dark:text-gray-400">
       No comments yet. Be the first to add one!
     </div>
     <div
@@ -41,15 +41,15 @@ defineProps({
       :key="comment.id"
       class="flex items-start space-x-3"
     >
-      <img
-        :src="comment.user.avatar_url || '/default-avatar.png'"
-        alt="user avatar"
-        class="w-10 h-10 rounded-full"
-      />
+      <div
+        class="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-full flex-shrink-0"
+      ></div>
       <div class="flex-1">
-        <p class="font-semibold">{{ comment.user.name }}</p>
-        <p class="text-gray-700">{{ comment.content }}</p>
-        <p class="text-xs text-gray-500 mt-1">
+        <p class="font-semibold text-gray-900 dark:text-white">
+          {{ comment.user.name }}
+        </p>
+        <p class="text-gray-700 dark:text-gray-300">{{ comment.content }}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
           {{ timeAgo(comment.created_at) }}
         </p>
       </div>

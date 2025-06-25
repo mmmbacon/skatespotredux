@@ -45,7 +45,7 @@ const filteredSpots = computed(() => {
       <div
         v-for="spot in filteredSpots"
         :key="spot.id"
-        class="cursor-pointer p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 border-t border-gray-100 dark:border-gray-700"
+        class="cursor-pointer p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
         :class="
           spot.id === selectedSpotId
             ? 'bg-gray-100 dark:bg-gray-700 border-l-4 border-blue-600'
