@@ -38,7 +38,7 @@ const filteredSpots = computed(() => {
         v-model="search"
         type="text"
         placeholder="Search spots..."
-        class="flex-1 rounded border px-2 py-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-colors"
+        class="flex-1 rounded border px-2 py-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-600 focus:border-transparent transition-colors"
       />
     </div>
     <div class="flex-1 overflow-y-auto space-y-0">
@@ -69,7 +69,7 @@ const filteredSpots = computed(() => {
           </div>
           <div class="flex items-center text-sm w-20 pr-4">
             <div class="text-right flex-1">
-              <span class="font-bold text-blue-600 dark:text-blue-400">{{
+              <span class="font-bold text-blue-600 dark:text-blue-600">{{
                 spot.score
               }}</span>
             </div>

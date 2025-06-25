@@ -132,7 +132,7 @@ onMounted(() => {
     >
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
         <span>skatespot</span
-        ><span class="text-blue-600 dark:text-blue-400">.app</span>
+        ><span class="text-blue-600 dark:text-blue-600">.app</span>
       </h1>
       <div class="flex items-center space-x-4">
         <button
@@ -149,7 +149,10 @@ onMounted(() => {
             class="w-5 h-5 text-gray-600 dark:text-gray-300"
           />
         </button>
-        <BaseButton v-if="!authStore.isAuthenticated" @click="authStore.login"
+        <BaseButton
+          v-if="!authStore.isAuthenticated"
+          @click="authStore.login"
+          color="primary"
           >Login with Google</BaseButton
         >
         <span v-else class="flex items-center space-x-2">

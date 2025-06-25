@@ -17,7 +17,7 @@
             <span
               :class="[
                 spot.my_vote === 1 && authStore.isAuthenticated
-                  ? 'text-blue-600 dark:text-blue-400'
+                  ? 'text-blue-600 dark:text-blue-600'
                   : '',
                 !authStore.isAuthenticated
                   ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'

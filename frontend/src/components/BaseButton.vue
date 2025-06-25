@@ -5,29 +5,40 @@ interface Props {
   variant?: 'default' | 'outline' | 'secondary' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   type?: 'button' | 'submit' | 'reset';
+  color?: 'primary' | 'default';
 }
 
 const props = withDefaults(defineProps<Props>(), {
   variant: 'default',
   type: 'button',
   size: 'md',
+  color: 'default',
 });
 
 const baseClasses =
   'inline-flex items-center rounded-md font-medium shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
 
 const variantClasses = computed(() => {
-  switch (props.variant) {
-    case 'secondary':
-      return 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600';
-    case 'danger':
-      return 'bg-red-600 text-white hover:bg-red-700';
-    case 'outline':
-      return 'border border-gray-300 dark:border-gray-600 bg-transparent shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white';
-    case 'default':
-    default:
-      return 'bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-gray-100';
+  const baseVariant = (() => {
+    switch (props.variant) {
+      case 'secondary':
+        return 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600';
+      case 'danger':
+        return 'bg-red-600 text-white hover:bg-red-700';
+      case 'outline':
+        return 'border border-gray-300 dark:border-gray-600 bg-transparent shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white';
+      case 'default':
+      default:
+        return 'bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-gray-100';
+    }
+  })();
+
+  // Override with primary color if specified
+  if (props.color === 'primary') {
+    return 'bg-blue-600 dark:bg-blue-600 text-white hover:bg-blue-700 dark:hover:bg-blue-700';
   }
+
+  return baseVariant;
 });
 
 const sizeClasses = computed(() => {
