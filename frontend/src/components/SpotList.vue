@@ -60,9 +60,14 @@ const filteredSpots = computed(() => {
       >
         <div class="flex items-center justify-between">
           <div class="font-semibold">{{ spot.name }}</div>
-          <span class="font-bold text-blue-600 text-sm w-8 text-right pr-2">{{
-            spot.score
-          }}</span>
+          <div class="flex items-center text-sm w-20 pr-4">
+            <div class="text-right flex-1">
+              <span class="font-bold text-blue-600">{{ spot.score }}</span>
+            </div>
+            <div class="text-right flex-1">
+              <span class="text-gray-400 ml-2">votes</span>
+            </div>
+          </div>
         </div>
         <div v-if="spot.description" class="text-xs text-gray-500">
           {{ spot.description }}
