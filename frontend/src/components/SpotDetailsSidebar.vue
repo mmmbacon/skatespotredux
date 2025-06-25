@@ -63,6 +63,22 @@
           >
         </template>
         <button
+          @click="showQRModal = true"
+          class="text-gray-500 hover:text-gray-800 p-2 rounded hover:bg-gray-100 transition-colors relative group"
+          title="Generate a QR code"
+        >
+          <Icon icon="mdi:qrcode" class="w-6 h-6" />
+          <!-- Custom tooltip -->
+          <div
+            class="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 px-3 py-2 bg-black text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10"
+          >
+            Generate a QR code
+            <div
+              class="absolute left-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-l-black"
+            ></div>
+          </div>
+        </button>
+        <button
           @click="$emit('close')"
           class="text-gray-500 hover:text-gray-800 text-2xl ml-2"
         >
@@ -87,6 +103,11 @@
       @close="showLoginPrompt = false"
       @login="handleLogin"
     />
+    <QRCodeModal
+      :isVisible="showQRModal"
+      :spotName="spot.name"
+      @close="showQRModal = false"
+    />
   </div>
 </template>
 
@@ -96,14 +117,17 @@ import BaseButton from './BaseButton.vue';
 import CommentList from './CommentList.vue';
 import CommentForm from './CommentForm.vue';
 import LoginPromptModal from './LoginPromptModal.vue';
+import QRCodeModal from './QRCodeModal.vue';
 import { useSpotsStore, type Spot } from '@/stores/spots';
 import { useAuthStore } from '@/stores/auth';
+import { Icon } from '@iconify/vue';
 
 const props = defineProps<{ spot: Spot }>();
 const emit = defineEmits(['close', 'edit-spot']);
 const spotsStore = useSpotsStore();
 const authStore = useAuthStore();
 const showLoginPrompt = ref(false);
+const showQRModal = ref(false);
 
 const canEdit = computed(() => {
   return (
