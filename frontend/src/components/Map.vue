@@ -27,6 +27,12 @@
           "
           @click="$emit('spot-selected', spot)"
         >
+          <l-tooltip :direction="'top'" :offset="[0, -10]" :sticky="false">
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-blue-700 mr-1">{{ spot.score }}</span>
+              <span class="font-semibold">{{ spot.name }}</span>
+            </div>
+          </l-tooltip>
         </l-marker>
         <!-- Draggable marker for editing -->
         <l-marker
@@ -90,6 +96,7 @@ import {
   LMarker,
   LIcon,
   LPopup,
+  LTooltip,
 } from '@vue-leaflet/vue-leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { PropType } from 'vue';
