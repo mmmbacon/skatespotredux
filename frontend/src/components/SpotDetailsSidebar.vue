@@ -71,8 +71,11 @@
       </div>
     </div>
     <div class="p-4 flex-1 overflow-y-auto">
-      <p v-if="spot.description" class="mb-2 text-gray-700">
+      <p v-if="spot.description" class="mb-4 text-gray-700">
         {{ spot.description }}
+      </p>
+      <p v-else class="mb-4 text-gray-500 italic">
+        No description available for this spot.
       </p>
       <hr class="mb-4" />
       <h4 class="font-semibold mb-2">Comments</h4>
