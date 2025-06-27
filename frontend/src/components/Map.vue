@@ -237,7 +237,7 @@ const handleMarkerDrag = (e: any) => {
 
 const zoom = ref(11);
 const isMounted = ref(false);
-const center = ref<[number, number]>([51.0447, -114.0719]); // Calgary - force center on Calgary
+const center = ref<[number, number]>([39.8283, -98.5795]); // Geographic center of US (default before geolocation)
 const mapRef = ref(null);
 const markerRefs = ref<Record<string, any>>({});
 
@@ -320,29 +320,25 @@ onMounted(() => {
   // is only rendered on the client, avoiding SSR issues.
   isMounted.value = true;
 
-  // Force center on Calgary for skate spots - don't use geolocation
-  console.log('Map centered on Calgary:', center.value);
-  
-  // Optional: Still try geolocation but don't override Calgary center
-  // if (navigator.geolocation) {
-  //   navigator.geolocation.getCurrentPosition(
-  //     (position) => {
-  //       center.value = [position.coords.latitude, position.coords.longitude];
-  //     },
-  //     (error) => {
-  //       console.error("Error getting user's location:", error);
-  //     }
-  //   );
-  // }
+  // Get user's location and center map there
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        center.value = [position.coords.latitude, position.coords.longitude];
+        console.log('Centered on user location:', center.value);
+      },
+      (error) => {
+        console.log('Location access denied or failed, using default');
+      }
+    );
+  }
 });
 
 const onMapReady = () => {
   if (mapRef.value) {
     const map = (mapRef.value as any).leafletObject;
     
-    // Force center on Calgary when map is ready
-    console.log('Map ready, forcing center to Calgary:', [51.0447, -114.0719]);
-    map.setView([51.0447, -114.0719], 11);
+    console.log('Map ready, current center:', center.value);
     
     map.on('moveend', () => {
       const bounds = map.getBounds();
