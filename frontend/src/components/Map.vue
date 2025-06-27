@@ -237,7 +237,50 @@ const handleMarkerDrag = (e: any) => {
 
 const zoom = ref(11);
 const isMounted = ref(false);
-const center = ref<[number, number]>([39.8283, -98.5795]); // Geographic center of US (default before geolocation)
+// Try to get saved location from localStorage, otherwise use default
+const getSavedLocation = (): [number, number] => {
+  const saved = localStorage.getItem('userLocation');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length === 2) {
+        console.log('Using saved location:', parsed);
+        return parsed as [number, number];
+      }
+    } catch (e) {
+      console.log('Invalid saved location, using default');
+    }
+  }
+  return [39.8283, -98.5795]; // Default center
+};
+
+const center = ref<[number, number]>(getSavedLocation());
+
+// Watch for center changes and update map view (but avoid infinite loops)
+watch(center, (newCenter, oldCenter) => {
+  if (mapRef.value && newCenter !== oldCenter) {
+    const map = (mapRef.value as any).leafletObject;
+    // Only update if the center actually changed significantly
+    const distance = Math.abs(newCenter[0] - oldCenter[0]) + Math.abs(newCenter[1] - oldCenter[1]);
+    if (distance > 0.001) { // Only update if moved more than ~100m
+      map.setView(newCenter, 11);
+      // Force map refresh after center change and emit bounds
+      setTimeout(() => {
+        map.invalidateSize();
+        // Emit bounds changed to trigger spot loading
+        const bounds = map.getBounds();
+        emit('bounds-changed', {
+          north: bounds.getNorth(),
+          south: bounds.getSouth(),
+          east: bounds.getEast(),
+          west: bounds.getWest(),
+        });
+        console.log('Map refreshed and bounds emitted after center change');
+      }, 100);
+      console.log('Map center updated to:', newCenter);
+    }
+  }
+});
 const mapRef = ref(null);
 const markerRefs = ref<Record<string, any>>({});
 
@@ -320,17 +363,55 @@ onMounted(() => {
   // is only rendered on the client, avoiding SSR issues.
   isMounted.value = true;
 
-  // Get user's location and center map there
-  if (navigator.geolocation) {
+  // Get user's location and center map there (only if we don't have a recent saved location)
+  const savedLocation = localStorage.getItem('userLocation');
+  const savedTimestamp = localStorage.getItem('userLocationTimestamp');
+  const isLocationFresh = savedTimestamp && (Date.now() - parseInt(savedTimestamp)) < 300000; // 5 minutes
+  
+  if (navigator.geolocation && (!savedLocation || !isLocationFresh)) {
+    console.log('Getting fresh location...');
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        center.value = [position.coords.latitude, position.coords.longitude];
-        console.log('Centered on user location:', center.value);
+        const userLocation: [number, number] = [position.coords.latitude, position.coords.longitude];
+        
+        // Save location to localStorage
+        localStorage.setItem('userLocation', JSON.stringify(userLocation));
+        localStorage.setItem('userLocationTimestamp', Date.now().toString());
+        
+        center.value = userLocation;
+        console.log('Got and saved user location:', center.value);
+        
+        // If map is already loaded, update its view immediately
+        if (mapRef.value) {
+          const map = (mapRef.value as any).leafletObject;
+          map.setView(userLocation, 11);
+          // Force map to refresh/invalidate to show markers
+          setTimeout(() => {
+            map.invalidateSize();
+            // Emit bounds changed to trigger spot loading
+            const bounds = map.getBounds();
+            emit('bounds-changed', {
+              north: bounds.getNorth(),
+              south: bounds.getSouth(),
+              east: bounds.getEast(),
+              west: bounds.getWest(),
+            });
+            console.log('Map refreshed and bounds emitted after location update');
+          }, 100);
+          console.log('Updated map view to user location');
+        }
       },
       (error) => {
-        console.log('Location access denied or failed, using default');
+        console.log('Location access denied or failed, using saved/default location');
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 5000,
+        maximumAge: 300000 // 5 minutes cache
       }
     );
+  } else {
+    console.log('Using cached location, skipping geolocation request');
   }
 });
 
@@ -339,6 +420,20 @@ const onMapReady = () => {
     const map = (mapRef.value as any).leafletObject;
     
     console.log('Map ready, current center:', center.value);
+    
+    // Force initial refresh and emit bounds to trigger spot loading
+    setTimeout(() => {
+      map.invalidateSize();
+      // Emit initial bounds to trigger spot loading
+      const bounds = map.getBounds();
+      emit('bounds-changed', {
+        north: bounds.getNorth(),
+        south: bounds.getSouth(),
+        east: bounds.getEast(),
+        west: bounds.getWest(),
+      });
+      console.log('Initial map refresh and bounds emitted on ready');
+    }, 200);
     
     map.on('moveend', () => {
       const bounds = map.getBounds();
@@ -403,9 +498,13 @@ console.log('Mapbox URL:', `https://api.mapbox.com/styles/v1/mapbox/${mapboxStyl
 // Debug spots coordinates
 watch(() => props.spots, (spots) => {
   console.log('Spots received:', spots.length);
-  spots.forEach(spot => {
-    console.log(`${spot.name}: [${spot.location.coordinates[0]}, ${spot.location.coordinates[1]}] -> [lat: ${spot.location.coordinates[1]}, lng: ${spot.location.coordinates[0]}]`);
-  });
+  if (spots.length === 0) {
+    console.log('No spots data - check if API is loading');
+  } else {
+    spots.forEach(spot => {
+      console.log(`${spot.name}: [${spot.location.coordinates[0]}, ${spot.location.coordinates[1]}] -> [lat: ${spot.location.coordinates[1]}, lng: ${spot.location.coordinates[0]}]`);
+    });
+  }
 }, { immediate: true });
 
 // Tile loading event handlers
