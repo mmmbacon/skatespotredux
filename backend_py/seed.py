@@ -54,7 +54,7 @@ async def seed_data():
                 "name": "Southwood Skatepark",
                 "description": "Neighborhood park with fun ledges and rails.",
                 "lon": -114.07137,
-                "lat": 50.96993,
+                "lat": 51.01993,
                 "user": users[1],
             },
             {

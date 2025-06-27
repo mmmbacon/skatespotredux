@@ -8,11 +8,22 @@
         :zoom-control-position="'bottomright'"
         @ready="onMapReady"
       >
+        <!-- Mapbox tiles if token is available, otherwise OpenStreetMap -->
         <l-tile-layer
+          v-if="mapboxToken"
+          :key="mapboxStyle"
+          :url="`https://api.mapbox.com/styles/v1/mapbox/${mapboxStyle}/tiles/256/{z}/{x}/{y}@2x?access_token=${mapboxToken}`"
+          :attribution="'Map data &copy; <a href=\'https://www.openstreetmap.org/\'>OpenStreetMap</a> contributors, Imagery © <a href=\'https://www.mapbox.com/\'>Mapbox</a>'"
+          @tileerror="onTileError"
+          @tileload="onTileLoad"
+        />
+        <l-tile-layer
+          v-else
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           layer-type="base"
           name="OpenStreetMap"
-        ></l-tile-layer>
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
 
         <!-- Loop through spots and create markers -->
         <l-marker
@@ -110,6 +121,7 @@ import {
   defineEmits,
   watch,
   nextTick,
+  computed,
 } from 'vue';
 import {
   LMap,
@@ -123,6 +135,7 @@ import 'leaflet/dist/leaflet.css';
 import type { PropType } from 'vue';
 import type { Spot } from '@/stores/spots';
 import { useSpotsStore } from '@/stores/spots';
+import { useThemeStore } from '@/stores/theme';
 import type { SpotCreatePayload } from '@/stores/spots';
 import BaseButton from './BaseButton.vue';
 import CommentList from './CommentList.vue';
@@ -175,6 +188,7 @@ const yellowIcon = new L.Icon({
 });
 
 const spotsStore = useSpotsStore();
+const themeStore = useThemeStore();
 const toast = useToast();
 
 // Define props
@@ -221,9 +235,9 @@ const handleMarkerDrag = (e: any) => {
   emit('location-updated', editableLocation.value);
 };
 
-const zoom = ref(12);
+const zoom = ref(11);
 const isMounted = ref(false);
-const center = ref<[number, number]>([51.0447, -114.0719]); // Calgary
+const center = ref<[number, number]>([51.0447, -114.0719]); // Calgary - force center on Calgary
 const mapRef = ref(null);
 const markerRefs = ref<Record<string, any>>({});
 
@@ -306,24 +320,30 @@ onMounted(() => {
   // is only rendered on the client, avoiding SSR issues.
   isMounted.value = true;
 
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        center.value = [position.coords.latitude, position.coords.longitude];
-      },
-      (error) => {
-        console.error("Error getting user's location:", error);
-        // Stick with the default center if there's an error
-      }
-    );
-  } else {
-    console.error('Geolocation is not supported by this browser.');
-  }
+  // Force center on Calgary for skate spots - don't use geolocation
+  console.log('Map centered on Calgary:', center.value);
+  
+  // Optional: Still try geolocation but don't override Calgary center
+  // if (navigator.geolocation) {
+  //   navigator.geolocation.getCurrentPosition(
+  //     (position) => {
+  //       center.value = [position.coords.latitude, position.coords.longitude];
+  //     },
+  //     (error) => {
+  //       console.error("Error getting user's location:", error);
+  //     }
+  //   );
+  // }
 });
 
 const onMapReady = () => {
   if (mapRef.value) {
     const map = (mapRef.value as any).leafletObject;
+    
+    // Force center on Calgary when map is ready
+    console.log('Map ready, forcing center to Calgary:', [51.0447, -114.0719]);
+    map.setView([51.0447, -114.0719], 11);
+    
     map.on('moveend', () => {
       const bounds = map.getBounds();
       emit('bounds-changed', {
@@ -338,6 +358,17 @@ const onMapReady = () => {
 
 const setCenter = (newCenter: [number, number]) => {
   center.value = newCenter;
+  // Also update the actual map if it exists
+  if (mapRef.value) {
+    const map = (mapRef.value as any).leafletObject;
+    map.setView(newCenter, 11);
+  }
+};
+
+const centerOnCalgary = () => {
+  const calgaryCoords: [number, number] = [51.0447, -114.0719];
+  console.log('Manually centering on Calgary:', calgaryCoords);
+  setCenter(calgaryCoords);
 };
 
 const panToWithOffset = (lat: number, lng: number, offsetX: number) => {
@@ -352,10 +383,49 @@ const panToWithOffset = (lat: number, lng: number, offsetX: number) => {
   map.panTo(offsetLatLng, { animate: true });
 };
 
+const mapboxToken = import.meta.env.VITE_MAPBOX_API_TOKEN;
+
+// Computed property for Mapbox style based on theme
+const mapboxStyle = computed(() => {
+  const isDark = themeStore.isDark;
+  if (isDark) {
+    // Use Navigation Guidance Night for dark mode
+    return 'navigation-guidance-night-v4';
+  } else {
+    // Use basic streets style for light mode
+    return 'streets-v11';
+  }
+});
+
+// Debug logging
+console.log('Mapbox token loaded:', mapboxToken ? 'YES' : 'NO');
+console.log('Token length:', mapboxToken?.length || 0);
+console.log('Theme:', themeStore.isDark ? 'Dark' : 'Light');
+console.log('Mapbox style:', mapboxStyle.value);
+console.log('Mapbox URL:', `https://api.mapbox.com/styles/v1/mapbox/${mapboxStyle.value}/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`);
+
+// Debug spots coordinates
+watch(() => props.spots, (spots) => {
+  console.log('Spots received:', spots.length);
+  spots.forEach(spot => {
+    console.log(`${spot.name}: [${spot.location.coordinates[0]}, ${spot.location.coordinates[1]}] -> [lat: ${spot.location.coordinates[1]}, lng: ${spot.location.coordinates[0]}]`);
+  });
+}, { immediate: true });
+
+// Tile loading event handlers
+const onTileError = (error: any) => {
+  console.error('Mapbox tile error:', error);
+};
+
+const onTileLoad = (event: any) => {
+  console.log('Mapbox tile loaded successfully');
+};
+
 defineExpose({
   setCenter,
   openPopupForSpot,
   panToWithOffset,
+  centerOnCalgary,
 });
 </script>
 
