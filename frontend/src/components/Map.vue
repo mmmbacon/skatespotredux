@@ -204,6 +204,7 @@ const emit = defineEmits([
   'create-finished',
   'edit-spot',
   'spot-selected',
+  'ready',
 ]);
 const editableLocation = ref<[number, number] | null>(null);
 

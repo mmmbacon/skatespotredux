@@ -13,16 +13,14 @@ FROM node:${NODE_VERSION}-alpine
 # Use production node environment by default.
 ENV NODE_ENV production
 
-RUN corepack enable
-
 WORKDIR /app
 
-# Copy all the package manager files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# Copy package.json files
+COPY package.json ./
 COPY frontend/package.json ./frontend/
 
-# Install dependencies
-RUN --mount=type=cache,target=/root/.pnpm pnpm install --frozen-lockfile
+# Install dependencies (skip prepare script for Docker build)
+RUN npm install --ignore-scripts
 
 # We are building the frontend service, so we change the workdir to the frontend package
 WORKDIR /app/frontend
@@ -38,4 +36,4 @@ USER node
 EXPOSE 5173
 
 # Run the application.
-CMD ["pnpm", "run", "dev", "--host"]
+CMD ["npm", "run", "dev", "--host"]

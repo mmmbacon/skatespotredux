@@ -50,7 +50,7 @@ services:
     container_name: skatespot-frontend
     environment:
       - VITE_BACKEND_URL=http://backend:3000
-    command: pnpm run dev --host
+    command: npm run dev --host
 
 volumes:
   pgdata:
