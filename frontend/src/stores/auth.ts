@@ -25,12 +25,20 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function fetchUser() {
-    if (!token.value) return;
+    if (!token.value) {
+      console.log('No token available, skipping user fetch');
+      return;
+    }
     try {
+      console.log('Fetching user with token:', token.value?.substring(0, 20) + '...');
       const { data } = await axios.get('/api/auth/google/me', {
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+        },
         withCredentials: true,
       });
       user.value = data;
+      console.log('User fetched successfully:', data);
     } catch (err) {
       console.error('Failed to fetch current user', err);
       logout(); // Use logout action to clear state
