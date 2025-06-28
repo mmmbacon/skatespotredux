@@ -244,11 +244,10 @@ const getSavedLocation = (): [number, number] => {
     try {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length === 2) {
-        console.log('Using saved location:', parsed);
         return parsed as [number, number];
       }
     } catch (e) {
-      console.log('Invalid saved location, using default');
+      // Invalid saved location, use default
     }
   }
   return [39.8283, -98.5795]; // Default center
@@ -275,9 +274,7 @@ watch(center, (newCenter, oldCenter) => {
           east: bounds.getEast(),
           west: bounds.getWest(),
         });
-        console.log('Map refreshed and bounds emitted after center change');
       }, 100);
-      console.log('Map center updated to:', newCenter);
     }
   }
 });
@@ -369,7 +366,6 @@ onMounted(() => {
   const isLocationFresh = savedTimestamp && (Date.now() - parseInt(savedTimestamp)) < 300000; // 5 minutes
   
   if (navigator.geolocation && (!savedLocation || !isLocationFresh)) {
-    console.log('Getting fresh location...');
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const userLocation: [number, number] = [position.coords.latitude, position.coords.longitude];
@@ -379,7 +375,6 @@ onMounted(() => {
         localStorage.setItem('userLocationTimestamp', Date.now().toString());
         
         center.value = userLocation;
-        console.log('Got and saved user location:', center.value);
         
         // If map is already loaded, update its view immediately
         if (mapRef.value) {
@@ -396,13 +391,11 @@ onMounted(() => {
               east: bounds.getEast(),
               west: bounds.getWest(),
             });
-            console.log('Map refreshed and bounds emitted after location update');
           }, 100);
-          console.log('Updated map view to user location');
         }
       },
       (error) => {
-        console.log('Location access denied or failed, using saved/default location');
+        // Location access denied or failed, using saved/default location
       },
       {
         enableHighAccuracy: false,
@@ -410,16 +403,12 @@ onMounted(() => {
         maximumAge: 300000 // 5 minutes cache
       }
     );
-  } else {
-    console.log('Using cached location, skipping geolocation request');
   }
 });
 
 const onMapReady = () => {
   if (mapRef.value) {
     const map = (mapRef.value as any).leafletObject;
-    
-    console.log('Map ready, current center:', center.value);
     
     // Force initial refresh and emit bounds to trigger spot loading
     setTimeout(() => {
@@ -432,8 +421,7 @@ const onMapReady = () => {
         east: bounds.getEast(),
         west: bounds.getWest(),
       });
-      console.log('Initial map refresh and bounds emitted on ready');
-    }, 200);
+            }, 200);
     
     map.on('moveend', () => {
       const bounds = map.getBounds();
@@ -458,7 +446,6 @@ const setCenter = (newCenter: [number, number]) => {
 
 const centerOnCalgary = () => {
   const calgaryCoords: [number, number] = [51.0447, -114.0719];
-  console.log('Manually centering on Calgary:', calgaryCoords);
   setCenter(calgaryCoords);
 };
 
@@ -488,32 +475,17 @@ const mapboxStyle = computed(() => {
   }
 });
 
-// Debug logging
-console.log('Mapbox token loaded:', mapboxToken ? 'YES' : 'NO');
-console.log('Token length:', mapboxToken?.length || 0);
-console.log('Theme:', themeStore.isDark ? 'Dark' : 'Light');
-console.log('Mapbox style:', mapboxStyle.value);
-console.log('Mapbox URL:', `https://api.mapbox.com/styles/v1/mapbox/${mapboxStyle.value}/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`);
 
-// Debug spots coordinates
-watch(() => props.spots, (spots) => {
-  console.log('Spots received:', spots.length);
-  if (spots.length === 0) {
-    console.log('No spots data - check if API is loading');
-  } else {
-    spots.forEach(spot => {
-      console.log(`${spot.name}: [${spot.location.coordinates[0]}, ${spot.location.coordinates[1]}] -> [lat: ${spot.location.coordinates[1]}, lng: ${spot.location.coordinates[0]}]`);
-    });
-  }
-}, { immediate: true });
+
+
 
 // Tile loading event handlers
 const onTileError = (error: any) => {
-  console.error('Mapbox tile error:', error);
+  // Mapbox tile error - could add user-facing error handling here if needed
 };
 
 const onTileLoad = (event: any) => {
-  console.log('Mapbox tile loaded successfully');
+  // Mapbox tile loaded successfully
 };
 
 defineExpose({
