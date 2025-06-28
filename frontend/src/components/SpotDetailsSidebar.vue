@@ -114,6 +114,7 @@
     <QRCodeModal
       :isVisible="showQRModal"
       :spotName="spot.name"
+      :spotId="spot.short_id"
       @close="showQRModal = false"
     />
   </div>

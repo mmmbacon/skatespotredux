@@ -117,8 +117,34 @@ const handleMapReady = () => {
   }
 };
 
-onMounted(() => {
+// Handle URL parameters for QR code functionality
+const handleUrlParameters = async () => {
+  const path = window.location.pathname;
+  const spotMatch = path.match(/^\/spot\/([a-zA-Z0-9]+)$/);
+  
+  if (spotMatch) {
+    const spotId = spotMatch[1];
+    
+    // Wait for initial spots to load
+    if (spotsStore.spots.length === 0) {
+      await spotsStore.fetchSpots();
+    }
+    
+    // Find the spot by short_id
+    const spot = spotsStore.spots.find(s => s.short_id === spotId);
+    if (spot) {
+      handleSpotSelected(spot);
+    }
+    
+    // Clean up the URL to remove the spot path
+    const cleanUrl = window.location.origin;
+    window.history.replaceState({}, document.title, cleanUrl);
+  }
+};
+
+onMounted(async () => {
   themeStore.initializeTheme();
+  await handleUrlParameters();
 });
 </script>
 
@@ -157,10 +183,10 @@ onMounted(() => {
         >
         <span v-else class="flex items-center space-x-2">
           <img
-            :src="authStore.user?.avatar_url"
+            :src="authStore.user?.picture"
             alt="avatar"
             class="w-8 h-8 rounded-full"
-            v-if="authStore.user?.avatar_url"
+            v-if="authStore.user?.picture"
           />
           <span class="text-gray-900 dark:text-white">{{
             authStore.user?.name || authStore.user?.email
@@ -222,7 +248,7 @@ onMounted(() => {
     <!-- Spot Form Modal (only for editing) -->
     <SpotForm
       :spot="editingSpot"
-      :isVisible="isFormOpen && editingSpot"
+      :isVisible="isFormOpen && !!editingSpot"
       @save="handleFormSubmit"
       @close="closeForm"
     />

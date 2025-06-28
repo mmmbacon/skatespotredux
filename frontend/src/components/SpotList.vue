@@ -9,7 +9,7 @@ const spotsStore = useSpotsStore();
 const authStore = useAuthStore();
 const emit = defineEmits(['spot-selected', 'start-creating']);
 const search = ref('');
-const props = defineProps<{ selectedSpotId?: number }>();
+const props = defineProps<{ selectedSpotId?: string }>();
 
 onMounted(() => {
   // The fetch is already called in App.vue, so this is redundant

@@ -32,6 +32,7 @@ class SpotUpdate(BaseModel):
 # Schema for reading a spot from the database
 class Spot(SpotBase):
     id: UUID
+    short_id: str
     user: UserPublic
     location: dict # The location will always be a GeoJSON dict in the response
     created_at: datetime

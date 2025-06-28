@@ -1,5 +1,7 @@
 from __future__ import annotations
 import uuid
+import secrets
+import string
 from datetime import datetime
 
 from sqlalchemy import (
@@ -8,6 +10,7 @@ from sqlalchemy import (
     String,
     Text,
     ForeignKey,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
@@ -16,10 +19,17 @@ from geoalchemy2 import Geometry
 from ..database import Base
 
 
+def generate_short_id(length: int = 4) -> str:
+    """Generate a random alphanumeric ID of specified length."""
+    alphabet = string.ascii_letters + string.digits  # a-z, A-Z, 0-9
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
+
+
 class Spot(Base):
     __tablename__ = "spots"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    short_id = Column(String(6), unique=True, nullable=False, index=True, default=generate_short_id)
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
     

@@ -10,10 +10,12 @@
   },
   "dependencies": {
     "@iconify/vue": "^5.0.0",
+    "@types/qrcode": "^1.5.5",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "axios": "^1.7.2",
     "leaflet": "^1.9.4",
     "pinia": "^2.1.7",
+    "qrcode": "^1.5.4",
     "vue": "^3.4.21",
     "vue-toastification": "2.0.0-rc.5"
   },

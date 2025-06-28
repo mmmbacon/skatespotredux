@@ -19,6 +19,7 @@ export interface Comment {
 
 export interface Spot {
   id: string;
+  short_id: string;
   name: string;
   description?: string;
   location: {
