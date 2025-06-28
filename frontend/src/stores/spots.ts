@@ -106,9 +106,9 @@ export const useSpotsStore = defineStore('spots', () => {
   async function updateSpot(spotId: string, spotData: SpotUpdatePayload) {
     console.log('updateSpot called with:', { spotId, spotData });
     try {
-      const response = await axios.put(`/api/spots/${spotId}/`, spotData, { withCredentials: true });
+      const response = await axios.put(`/api/spots/by-short-id/${spotId}`, spotData);
       console.log('Update response:', response.data);
-      const index = spots.value.findIndex((s) => s.id === spotId);
+      const index = spots.value.findIndex((s) => s.short_id === spotId);
       if (index !== -1) {
         spots.value[index] = response.data;
         console.log('Spot updated in store');

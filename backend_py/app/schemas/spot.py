@@ -48,6 +48,15 @@ class Spot(SpotBase):
             geom = wkb_loads(v.data)
             # Convert the geometry object to a GeoJSON dict
             return json.loads(json.dumps(geom.__geo_interface__))
+        elif isinstance(v, str) and v.startswith('POINT('):
+            # Handle WKT string format: 'POINT(-114.03070 51.04107)'
+            # Extract coordinates from the WKT string
+            coords_str = v.replace('POINT(', '').replace(')', '')
+            lon, lat = map(float, coords_str.split())
+            return {
+                "type": "Point",
+                "coordinates": [lon, lat]
+            }
         return v
 
     class Config:

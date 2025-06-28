@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.future import select
 from geoalchemy2.functions import ST_MakeEnvelope, ST_Contains
 from typing import List, Optional
@@ -145,6 +145,65 @@ async def update_spot(
     await db.commit()
     await db.refresh(db_spot)
     return db_spot
+
+
+@router.put("/by-short-id/{short_id}", response_model=schemas.Spot)
+async def update_spot_by_short_id(
+    short_id: str,
+    spot_update: schemas.SpotUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Update a skate spot by short_id.
+    """
+    # Find spot by short_id
+    result = await db.execute(select(Spot).where(Spot.short_id == short_id))
+    db_spot = result.scalars().first()
+
+    if not db_spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+
+    if db_spot.user_id != current_user.id:
+        raise HTTPException(
+            status_code=403, detail="Not authorized to update this spot"
+        )
+
+    update_data = spot_update.model_dump(exclude_unset=True)
+
+    for key, value in update_data.items():
+        if key == "location" and value:
+            point = value["coordinates"]
+            wkt_location = f"POINT({point[0]} {point[1]})"
+            setattr(db_spot, key, wkt_location)
+        else:
+            setattr(db_spot, key, value)
+
+    await db.commit()
+    
+    # Reload the spot with all relationships to avoid serialization issues
+    result = await db.execute(
+        select(Spot)
+        .options(
+            joinedload(Spot.user),
+            joinedload(Spot.comments).joinedload(Comment.user)
+        )
+        .where(Spot.short_id == short_id)
+    )
+    updated_spot = result.unique().scalar_one()
+    
+    # Add vote info
+    vote_result = await db.execute(
+        select(func.coalesce(func.sum(Vote.value), 0)).where(Vote.spot_id == updated_spot.id)
+    )
+    updated_spot.score = vote_result.scalar() or 0
+
+    my_vote_result = await db.execute(
+        select(Vote.value).where(Vote.spot_id == updated_spot.id, Vote.user_id == current_user.id)
+    )
+    updated_spot.my_vote = my_vote_result.scalar()
+    
+    return updated_spot
 
 
 @router.delete("/{spot_id}", status_code=204)
