@@ -6,14 +6,14 @@
       left: (originalX - 8) + 'px', 
       top: (originalY - 8) + 'px',
       position: 'fixed',
-      zIndex: 9998
+      zIndex: 40
     }"
     class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg pointer-events-none animate-pulse"
   ></div>
   
   <!-- Context menu -->
   <div
-    v-if="visible"
+    v-if="visible && !showDotOnly"
     :style="{ left: originalX + 'px', top: originalY + 'px' }"
     class="context-menu fixed bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-600 py-2 min-w-[160px]"
     style="z-index: 9999 !important; border-radius: 0 12px 12px 12px;"
@@ -45,6 +45,7 @@ defineProps<{
   originalY: number;
   lat: number;
   lng: number;
+  showDotOnly?: boolean;
 }>();
 
 defineEmits<{

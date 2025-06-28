@@ -1,7 +1,8 @@
 <template>
   <div
     v-if="visible"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+    style="z-index: 9999 !important;"
     @click.self="$emit('close')"
   >
     <div

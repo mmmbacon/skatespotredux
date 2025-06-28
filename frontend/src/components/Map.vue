@@ -134,6 +134,7 @@
       :original-y="contextMenu.originalY"
       :lat="contextMenu.lat"
       :lng="contextMenu.lng"
+      :show-dot-only="createModal.visible"
       @add-spot="handleContextMenuAddSpot"
     />
     
@@ -430,11 +431,12 @@ const handleContextMenuAddSpot = () => {
     lat: contextMenu.value.lat,
     lng: contextMenu.value.lng,
   };
-  contextMenu.value.visible = false;
+  // Context menu will automatically show only the dot when modal is visible
 };
 
 const handleCloseCreateModal = () => {
   createModal.value.visible = false;
+  contextMenu.value.visible = false; // Hide the context menu dot when modal closes
 };
 
 const handleCreateSpotFromModal = async (payload: { name: string; description: string; lat: number; lng: number }) => {
@@ -448,6 +450,7 @@ const handleCreateSpotFromModal = async (payload: { name: string; description: s
   };
   await spotsStore.addSpot(spotPayload);
   createModal.value.visible = false;
+  contextMenu.value.visible = false; // Hide the context menu dot when spot is created
   toast.success('Spot created successfully!');
 };
 
