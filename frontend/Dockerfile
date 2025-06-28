@@ -10,8 +10,8 @@ ARG NODE_VERSION=20.19.2
 
 FROM node:${NODE_VERSION}-alpine
 
-# Use production node environment by default.
-ENV NODE_ENV production
+# Use development node environment for dev server.
+ENV NODE_ENV development
 
 WORKDIR /app
 

@@ -109,6 +109,25 @@
         </l-marker>
       </l-map>
     </div>
+    
+    <!-- Context Menu -->
+    <ContextMenu
+      :visible="contextMenu.visible"
+      :x="contextMenu.x"
+      :y="contextMenu.y"
+      :lat="contextMenu.lat"
+      :lng="contextMenu.lng"
+      @add-spot="handleContextMenuAddSpot"
+    />
+    
+    <!-- Spot Create Modal -->
+    <SpotCreateModal
+      :visible="createModal.visible"
+      :lat="createModal.lat"
+      :lng="createModal.lng"
+      @close="handleCloseCreateModal"
+      @create="handleCreateSpotFromModal"
+    />
   </div>
 </template>
 
@@ -116,6 +135,7 @@
 import {
   ref,
   onMounted,
+  onUnmounted,
   defineProps,
   defineExpose,
   defineEmits,
@@ -140,6 +160,8 @@ import type { SpotCreatePayload } from '@/stores/spots';
 import BaseButton from './BaseButton.vue';
 import CommentList from './CommentList.vue';
 import CommentForm from './CommentForm.vue';
+import ContextMenu from './ContextMenu.vue';
+import SpotCreateModal from './SpotCreateModal.vue';
 import { useToast } from 'vue-toastification';
 import L from 'leaflet';
 
@@ -299,6 +321,22 @@ const newSpotDescription = ref('');
 const newSpotLocation = ref<[number, number] | null>(null);
 const newMarkerRef = ref(null);
 
+// Context menu state
+const contextMenu = ref({
+  visible: false,
+  x: 0,
+  y: 0,
+  lat: 0,
+  lng: 0,
+});
+
+// Create modal state
+const createModal = ref({
+  visible: false,
+  lat: 0,
+  lng: 0,
+});
+
 watch(
   () => props.isCreating,
   (creating) => {
@@ -355,10 +393,41 @@ const handleDelete = async (spotId: string) => {
   }
 };
 
+// Context menu handlers
+const handleContextMenuAddSpot = () => {
+  createModal.value = {
+    visible: true,
+    lat: contextMenu.value.lat,
+    lng: contextMenu.value.lng,
+  };
+  contextMenu.value.visible = false;
+};
+
+const handleCloseCreateModal = () => {
+  createModal.value.visible = false;
+};
+
+const handleCreateSpotFromModal = async (payload: { name: string; description: string; lat: number; lng: number }) => {
+  const spotPayload: SpotCreatePayload = {
+    name: payload.name,
+    description: payload.description,
+    location: {
+      type: 'Point',
+      coordinates: [payload.lng, payload.lat], // Lng, Lat for GeoJSON
+    },
+  };
+  await spotsStore.addSpot(spotPayload);
+  createModal.value.visible = false;
+  toast.success('Spot created successfully!');
+};
+
 onMounted(() => {
   // By setting this flag in onMounted, we ensure the map component
   // is only rendered on the client, avoiding SSR issues.
   isMounted.value = true;
+  
+  // Add global click handler to hide context menu
+  document.addEventListener('click', hideContextMenu);
 
   // Get user's location and center map there (only if we don't have a recent saved location)
   const savedLocation = localStorage.getItem('userLocation');
@@ -406,6 +475,15 @@ onMounted(() => {
   }
 });
 
+// Store the click handler for cleanup
+const hideContextMenu = () => {
+  contextMenu.value.visible = false;
+};
+
+onUnmounted(() => {
+  document.removeEventListener('click', hideContextMenu);
+});
+
 const onMapReady = () => {
   if (mapRef.value) {
     const map = (mapRef.value as any).leafletObject;
@@ -421,7 +499,7 @@ const onMapReady = () => {
         east: bounds.getEast(),
         west: bounds.getWest(),
       });
-            }, 200);
+      }, 200);
     
     map.on('moveend', () => {
       const bounds = map.getBounds();
@@ -431,6 +509,23 @@ const onMapReady = () => {
         east: bounds.getEast(),
         west: bounds.getWest(),
       });
+    });
+    
+    // Add right-click context menu
+    map.on('contextmenu', (e: any) => {
+      e.originalEvent.preventDefault();
+      contextMenu.value = {
+        visible: true,
+        x: e.originalEvent.clientX,
+        y: e.originalEvent.clientY,
+        lat: e.latlng.lat,
+        lng: e.latlng.lng,
+      };
+    });
+    
+    // Hide context menu on regular click
+    map.on('click', () => {
+      contextMenu.value.visible = false;
     });
   }
 };
