@@ -6,7 +6,6 @@ import type {
   SpotUpdatePayload,
 } from '@/stores/spots';
 import BaseButton from './BaseButton.vue';
-import axios from 'axios';
 
 interface Props {
   spot: Spot | null;
@@ -20,54 +19,51 @@ const form = ref<Partial<SpotCreatePayload | SpotUpdatePayload>>({
   description: '',
 });
 
-const imageUrl = ref<string | null>(null);
-const uploading = ref(false);
-const uploadError = ref<string | null>(null);
-
 watch(
   () => props.spot,
   (newSpot) => {
+    console.log('SpotForm watch triggered with:', newSpot);
     if (newSpot) {
       form.value = { name: newSpot.name, description: newSpot.description };
-      imageUrl.value = newSpot.photos?.[0] || null;
+      console.log('Form populated with:', form.value);
     } else {
       form.value = { name: '', description: '' };
-      imageUrl.value = null;
+      console.log('Form reset');
     }
-  }
+  },
+  { immediate: true }
 );
 
-const handleFileChange = async (e: Event) => {
-  const file = (e.target as HTMLInputElement).files?.[0];
-  if (!file) return;
-  uploading.value = true;
-  uploadError.value = null;
-  try {
-    // Get presigned URL
-    const { data } = await axios.post(`/api/spots/image-upload-url`, null, {
-      params: {
-        filename: file.name,
-        content_type: file.type,
-      },
-    });
-    const { url, public_url } = data;
-    // Upload to R2
-    await axios.put(url, file, {
-      headers: { 'Content-Type': file.type },
-    });
-    imageUrl.value = public_url;
-  } catch (err: any) {
-    uploadError.value = 'Image upload failed.';
-  } finally {
-    uploading.value = false;
-  }
-};
-
 const handleSave = () => {
-  emit('save', {
-    ...form.value,
-    photos: imageUrl.value ? [imageUrl.value] : [],
-  });
+  console.log('handleSave called', { spot: props.spot, form: form.value });
+  
+  // Validate that name is not empty
+  if (!form.value.name || !form.value.name.trim()) {
+    console.error('Name is required');
+    return;
+  }
+  
+  if (props.spot) {
+    // For editing, only send the fields that can be updated
+    const updateData: SpotUpdatePayload = {
+      name: form.value.name.trim(),
+      description: form.value.description?.trim() || '',
+      // Keep the original location since we're not allowing location changes in edit mode
+      location: props.spot.location
+    };
+    console.log('Emitting save with update data:', updateData);
+    emit('save', updateData);
+  } else {
+    // For creating, send the full create payload
+    emit('save', {
+      name: form.value.name.trim(),
+      description: form.value.description?.trim() || '',
+      location: {
+        type: 'Point',
+        coordinates: [0, 0] // This should be set by the parent component
+      }
+    });
+  }
 };
 </script>
 
@@ -106,28 +102,15 @@ const handleSave = () => {
             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           ></textarea>
         </div>
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700">Image</label>
-          <input type="file" accept="image/*" @change="handleFileChange" />
-          <div v-if="uploading" class="text-sm text-gray-500 mt-1">
-            Uploading...
-          </div>
-          <div v-if="uploadError" class="text-sm text-red-500 mt-1">
-            {{ uploadError }}
-          </div>
-          <div v-if="imageUrl" class="mt-2">
-            <img
-              :src="imageUrl"
-              alt="Spot image"
-              class="w-32 h-32 object-cover rounded border"
-            />
-          </div>
-        </div>
         <div class="flex justify-end space-x-4">
           <BaseButton type="button" variant="secondary" @click="$emit('close')">
             Cancel
           </BaseButton>
-          <BaseButton type="submit" variant="default">
+          <BaseButton 
+            type="submit" 
+            variant="default"
+            @click="handleSave"
+          >
             {{ spot ? 'Save Changes' : 'Create Spot' }}
           </BaseButton>
         </div>

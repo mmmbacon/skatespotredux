@@ -59,17 +59,6 @@
         </div>
       </div>
       <div class="flex items-center space-x-2">
-        <template v-if="canEdit">
-          <BaseButton
-            @click="$emit('edit-spot', spot)"
-            variant="secondary"
-            size="sm"
-            >Edit</BaseButton
-          >
-          <BaseButton @click="handleDelete" variant="danger" size="sm"
-            >Delete</BaseButton
-          >
-        </template>
         <button
           @click="showQRModal = true"
           class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative group"
@@ -92,6 +81,20 @@
         >
           &times;
         </button>
+      </div>
+    </div>
+    <!-- Edit/Delete buttons row -->
+    <div v-if="canEdit" class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex items-center space-x-2">
+        <BaseButton
+          @click="$emit('edit-spot', spot)"
+          variant="secondary"
+          size="sm"
+          >Edit</BaseButton
+        >
+        <BaseButton @click="handleDelete" variant="danger" size="sm"
+          >Delete</BaseButton
+        >
       </div>
     </div>
     <div class="p-4 flex-1 overflow-y-auto">

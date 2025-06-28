@@ -96,9 +96,14 @@ function closeForm() {
 }
 
 async function handleFormSubmit(payload: SpotCreatePayload) {
+  console.log('handleFormSubmit called with payload:', payload);
+  console.log('editingSpot:', editingSpot.value);
+  
   if (editingSpot.value) {
-    await spotsStore.updateSpot(editingSpot.value.id, payload);
+    console.log('Updating spot with short ID:', editingSpot.value.short_id);
+    await spotsStore.updateSpot(editingSpot.value.short_id, payload);
   } else {
+    console.log('Creating new spot');
     await spotsStore.addSpot(payload);
   }
   closeForm();
