@@ -183,10 +183,10 @@ onMounted(async () => {
         >
         <span v-else class="flex items-center space-x-2">
           <img
-            :src="authStore.user?.picture"
+            :src="authStore.user?.avatar_url"
             alt="avatar"
             class="w-8 h-8 rounded-full"
-            v-if="authStore.user?.picture"
+            v-if="authStore.user?.avatar_url"
           />
           <span class="text-gray-900 dark:text-white">{{
             authStore.user?.name || authStore.user?.email

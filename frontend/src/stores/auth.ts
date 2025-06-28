@@ -6,7 +6,7 @@ interface User {
   id: string;
   email: string;
   name?: string;
-  picture?: string;
+  avatar_url?: string;
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -35,8 +35,10 @@ export const useAuthStore = defineStore('auth', () => {
         },
         withCredentials: true,
       });
+      console.log('User data received:', data);
       user.value = data;
     } catch (err) {
+      console.error('Error fetching user:', err);
       logout(); // Use logout action to clear state
     }
   }
