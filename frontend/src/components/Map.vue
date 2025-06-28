@@ -107,6 +107,21 @@
             </div>
           </l-popup>
         </l-marker>
+
+        <!-- Preview marker for context menu spot creation -->
+        <l-marker
+          v-if="createModal.visible"
+          :lat-lng="[createModal.lat, createModal.lng]"
+          :icon="previewIcon"
+          :z-index-offset="1000"
+        >
+          <l-tooltip :permanent="true" direction="top" class="preview-tooltip">
+            <div class="text-center">
+              <div class="font-semibold text-green-600">📍 New Spot Location</div>
+              <div class="text-xs text-gray-600">{{ formatCoordinates(createModal.lat, createModal.lng) }}</div>
+            </div>
+          </l-tooltip>
+        </l-marker>
       </l-map>
     </div>
     
@@ -115,6 +130,8 @@
       :visible="contextMenu.visible"
       :x="contextMenu.x"
       :y="contextMenu.y"
+      :original-x="contextMenu.originalX"
+      :original-y="contextMenu.originalY"
       :lat="contextMenu.lat"
       :lng="contextMenu.lng"
       @add-spot="handleContextMenuAddSpot"
@@ -201,6 +218,17 @@ const blueIcon = new L.Icon({
 const yellowIcon = new L.Icon({
   iconUrl:
     'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+const previewIcon = new L.Icon({
+  iconUrl:
+    'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
   shadowUrl:
     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
   iconSize: [25, 41],
@@ -326,6 +354,8 @@ const contextMenu = ref({
   visible: false,
   x: 0,
   y: 0,
+  originalX: 0,
+  originalY: 0,
   lat: 0,
   lng: 0,
 });
@@ -421,6 +451,11 @@ const handleCreateSpotFromModal = async (payload: { name: string; description: s
   toast.success('Spot created successfully!');
 };
 
+// Helper function to format coordinates
+const formatCoordinates = (lat: number, lng: number): string => {
+  return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+};
+
 onMounted(() => {
   // By setting this flag in onMounted, we ensure the map component
   // is only rendered on the client, avoiding SSR issues.
@@ -476,7 +511,11 @@ onMounted(() => {
 });
 
 // Store the click handler for cleanup
-const hideContextMenu = () => {
+const hideContextMenu = (event: Event) => {
+  // Don't hide if clicking on the context menu itself
+  if (event.target && (event.target as Element).closest('.context-menu')) {
+    return;
+  }
   contextMenu.value.visible = false;
 };
 
@@ -514,10 +553,13 @@ const onMapReady = () => {
     // Add right-click context menu
     map.on('contextmenu', (e: any) => {
       e.originalEvent.preventDefault();
+      e.originalEvent.stopPropagation();
       contextMenu.value = {
         visible: true,
-        x: e.originalEvent.clientX,
-        y: e.originalEvent.clientY,
+        x: e.originalEvent.clientX, // Keep for compatibility
+        y: e.originalEvent.clientY, // Keep for compatibility
+        originalX: e.originalEvent.clientX, // Original click position
+        originalY: e.originalEvent.clientY, // Original click position
         lat: e.latlng.lat,
         lng: e.latlng.lng,
       };
@@ -604,6 +646,7 @@ defineExpose({
   width: 100%;
   height: 100%;
   z-index: 0;
+  cursor: crosshair;
 }
 
 /* Ensure tooltips are visible above other elements */
@@ -633,5 +676,38 @@ defineExpose({
 
 :deep(.selected-marker .leaflet-marker-icon) {
   z-index: 1001 !important;
+}
+
+/* Custom cursor styles for the map */
+:deep(.leaflet-container) {
+  cursor: crosshair !important;
+}
+
+:deep(.leaflet-marker-icon) {
+  cursor: pointer !important;
+}
+
+:deep(.leaflet-popup) {
+  cursor: default !important;
+}
+
+:deep(.leaflet-control) {
+  cursor: pointer !important;
+}
+
+/* Preview marker tooltip styling */
+:deep(.preview-tooltip) {
+  z-index: 10000 !important;
+}
+
+:deep(.preview-tooltip .leaflet-tooltip) {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid #10b981 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  z-index: 10000 !important;
 }
 </style>
