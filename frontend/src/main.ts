@@ -19,7 +19,7 @@ axios.defaults.baseURL = '/';
 // Use the auth store outside of a component
 const authStore = useAuthStore(pinia);
 
-axios.interceptors.request.use((config) => {
+axios.interceptors.request.use(config => {
   if (authStore.token) {
     config.headers.Authorization = `Bearer ${authStore.token}`;
   }

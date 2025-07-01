@@ -64,7 +64,7 @@ export const useSpotsStore = defineStore('spots', () => {
       return spots.value;
     }
     return spots.value.filter(
-      (spot) =>
+      spot =>
         spot.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
         spot.description
           ?.toLowerCase()
@@ -106,9 +106,12 @@ export const useSpotsStore = defineStore('spots', () => {
   async function updateSpot(spotId: string, spotData: SpotUpdatePayload) {
     console.log('updateSpot called with:', { spotId, spotData });
     try {
-      const response = await axios.put(`/api/spots/by-short-id/${spotId}`, spotData);
+      const response = await axios.put(
+        `/api/spots/by-short-id/${spotId}`,
+        spotData
+      );
       console.log('Update response:', response.data);
-      const index = spots.value.findIndex((s) => s.short_id === spotId);
+      const index = spots.value.findIndex(s => s.short_id === spotId);
       if (index !== -1) {
         spots.value[index] = response.data;
         console.log('Spot updated in store');
@@ -122,7 +125,7 @@ export const useSpotsStore = defineStore('spots', () => {
   async function deleteSpot(spotId: string) {
     try {
       await axios.delete(`/api/spots/${spotId}/`);
-      spots.value = spots.value.filter((s) => s.id !== spotId);
+      spots.value = spots.value.filter(s => s.id !== spotId);
     } catch (e: any) {
       console.error('Failed to delete spot', e);
       throw e;
@@ -137,7 +140,7 @@ export const useSpotsStore = defineStore('spots', () => {
         { withCredentials: true }
       );
       const comment = response.data;
-      const spot = spots.value.find((s) => s.id === spotId);
+      const spot = spots.value.find(s => s.id === spotId);
       if (spot) {
         if (!spot.comments) {
           spot.comments = [];
@@ -178,7 +181,7 @@ export const useSpotsStore = defineStore('spots', () => {
   }
 
   function updateSpotFromServer(serverSpot: Spot) {
-    const idx = spots.value.findIndex((s) => s.id === serverSpot.id);
+    const idx = spots.value.findIndex(s => s.id === serverSpot.id);
     if (idx !== -1) {
       spots.value[idx] = serverSpot;
     }

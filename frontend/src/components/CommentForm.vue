@@ -1,40 +1,43 @@
 <script setup lang="ts">
-import { ref, defineEmits } from 'vue';
-import BaseButton from './BaseButton.vue';
-import axios from 'axios';
-import { useAuthStore } from '@/stores/auth';
-import LoginPromptModal from './LoginPromptModal.vue';
+  import { ref, defineEmits } from 'vue';
+  import BaseButton from './BaseButton.vue';
+  import axios from 'axios';
+  import { useAuthStore } from '@/stores/auth';
+  import LoginPromptModal from './LoginPromptModal.vue';
 
-const emit = defineEmits(['submit-comment']);
-const content = ref('');
-const authStore = useAuthStore();
-const showField = ref(false);
-const showLoginPrompt = ref(false);
+  const emit = defineEmits(['submit-comment']);
+  const content = ref('');
+  const authStore = useAuthStore();
+  const showField = ref(false);
+  const showLoginPrompt = ref(false);
 
-const handleSubmit = () => {
-  if (content.value.trim()) {
-    emit('submit-comment', content.value);
-    content.value = '';
-    showField.value = false;
-  }
-};
+  const handleSubmit = () => {
+    if (content.value.trim()) {
+      emit('submit-comment', content.value);
+      content.value = '';
+      showField.value = false;
+    }
+  };
 
-const handleShowField = () => {
-  if (authStore.isAuthenticated) {
-    showField.value = true;
-  } else {
-    showLoginPrompt.value = true;
-  }
-};
+  const handleShowField = () => {
+    if (authStore.isAuthenticated) {
+      showField.value = true;
+    } else {
+      showLoginPrompt.value = true;
+    }
+  };
 
-const handleLogin = () => {
-  showLoginPrompt.value = false;
-  authStore.login();
-};
+  const handleLogin = () => {
+    showLoginPrompt.value = false;
+    authStore.login();
+  };
 </script>
 
 <template>
-  <form @submit.prevent="handleSubmit" class="mt-4">
+  <form
+    @submit.prevent="handleSubmit"
+    class="mt-4"
+  >
     <template v-if="authStore.isAuthenticated">
       <template v-if="showField">
         <textarea
@@ -44,7 +47,11 @@ const handleLogin = () => {
           class="w-full px-3 py-2 border rounded-lg mb-2"
           required
         ></textarea>
-        <BaseButton type="submit" color="primary" size="sm">
+        <BaseButton
+          type="submit"
+          color="primary"
+          size="sm"
+        >
           Post Comment
         </BaseButton>
       </template>

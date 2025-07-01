@@ -1,34 +1,33 @@
 <script setup lang="ts">
-import { onMounted, defineEmits, ref, computed } from 'vue';
-import { useSpotsStore } from '@/stores/spots';
-import type { Spot } from '@/stores/spots';
-import { useAuthStore } from '@/stores/auth';
-import BaseButton from './BaseButton.vue';
+  import { onMounted, defineEmits, ref, computed } from 'vue';
+  import { useSpotsStore } from '@/stores/spots';
+  import type { Spot } from '@/stores/spots';
+  import { useAuthStore } from '@/stores/auth';
+  import BaseButton from './BaseButton.vue';
 
-const spotsStore = useSpotsStore();
-const authStore = useAuthStore();
-const emit = defineEmits(['spot-selected', 'start-creating']);
-const search = ref('');
-const props = defineProps<{ selectedSpotId?: string }>();
+  const spotsStore = useSpotsStore();
+  const authStore = useAuthStore();
+  const emit = defineEmits(['spot-selected', 'start-creating']);
+  const search = ref('');
+  const props = defineProps<{ selectedSpotId?: string }>();
 
-onMounted(() => {
-  // The fetch is already called in App.vue, so this is redundant
-  // spotsStore.fetchSpots();
-});
+  onMounted(() => {
+    // The fetch is already called in App.vue, so this is redundant
+    // spotsStore.fetchSpots();
+  });
 
-const handleSpotClick = (spot: Spot) => {
-  emit('spot-selected', spot);
-};
+  const handleSpotClick = (spot: Spot) => {
+    emit('spot-selected', spot);
+  };
 
-const filteredSpots = computed(() => {
-  if (!search.value) return spotsStore.spots;
-  return spotsStore.spots.filter(
-    (spot) =>
-      spot.name.toLowerCase().includes(search.value.toLowerCase()) ||
-      (spot.description &&
-        spot.description.toLowerCase().includes(search.value.toLowerCase()))
-  );
-});
+  const filteredSpots = computed(() => {
+    if (!search.value) return spotsStore.spots;
+    return spotsStore.spots.filter(
+      spot =>
+        spot.name.toLowerCase().includes(search.value.toLowerCase()) ||
+        (spot.description && spot.description.toLowerCase().includes(search.value.toLowerCase()))
+    );
+  });
 </script>
 
 <template>
@@ -60,18 +59,14 @@ const filteredSpots = computed(() => {
       >
         <div class="flex items-center justify-between">
           <div class="flex items-center">
-            <div
-              class="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded mr-3 flex-shrink-0"
-            ></div>
+            <div class="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded mr-3 flex-shrink-0"></div>
             <div class="font-medium text-gray-900 dark:text-white">
               {{ spot.name }}
             </div>
           </div>
           <div class="flex items-center text-sm w-20 pr-4">
             <div class="text-right flex-1">
-              <span class="font-bold text-blue-600 dark:text-blue-600">{{
-                spot.score
-              }}</span>
+              <span class="font-bold text-blue-600 dark:text-blue-600">{{ spot.score }}</span>
             </div>
             <div class="text-right flex-1">
               <span class="text-gray-400 dark:text-gray-500 ml-2">votes</span>
