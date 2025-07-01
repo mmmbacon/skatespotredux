@@ -29,17 +29,17 @@
         />
 
         <!-- Loop through spots and create markers -->
-        <div v-for="spot in spots">
-          <l-marker
-            :key="spot.id + (props.activeSpotId === spot.id ? '-active' : '')"
-            :ref="el => setMarkerRef(el, spot.id)"
-            :lat-lng="
-              [spot.location.coordinates[1], spot.location.coordinates[0]] as [number, number]
-            "
-            @click="$emit('spot-selected', spot)"
-            :icon="String(props.activeSpotId) === String(spot.id) ? blueIcon : yellowIcon"
-            :class="String(props.activeSpotId) === String(spot.id) ? 'selected-marker' : ''"
-          ></l-marker>
+        <l-marker
+          v-for="spot in spots"
+          :key="spot.id + (props.activeSpotId === spot.id ? '-active' : '')"
+          :ref="el => setMarkerRef(el, spot.id)"
+          :lat-lng="
+            [spot.location.coordinates[1], spot.location.coordinates[0]] as [number, number]
+          "
+          @click="$emit('spot-selected', spot)"
+          :icon="String(props.activeSpotId) === String(spot.id) ? blueIcon : yellowIcon"
+          :class="String(props.activeSpotId) === String(spot.id) ? 'selected-marker' : ''"
+        >
           <l-tooltip
             :direction="'top'"
             :offset-x="10"
@@ -57,7 +57,7 @@
               <span class="font-semibold">{{ spot.name }}</span>
             </div>
           </l-tooltip>
-        </div>
+        </l-marker>
 
         <!-- Draggable marker for editing -->
         <l-marker

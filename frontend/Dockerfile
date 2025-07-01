@@ -8,19 +8,19 @@
 
 ARG NODE_VERSION=20.19.2
 
-FROM node:${NODE_VERSION}-alpine
+FROM node:${NODE_VERSION}
 
 # Use development node environment for dev server.
 ENV NODE_ENV development
 
 WORKDIR /app
 
+# Install pnpm globally for better dependency management
+RUN npm install -g pnpm
+
 # Copy package.json files
 COPY package.json ./
 COPY frontend/package.json ./frontend/
-
-# Install dependencies (skip prepare script for Docker build)
-RUN npm install --ignore-scripts
 
 # We are building the frontend service, so we change the workdir to the frontend package
 WORKDIR /app/frontend
@@ -29,6 +29,12 @@ WORKDIR /app/frontend
 # Note that we are in /app/frontend now. The context for COPY is still the build context root.
 COPY frontend/ .
 
+# Install dependencies with pnpm (handles optional deps better)
+RUN pnpm install
+
+# Force reinstall rollup to fix native module issues
+RUN pnpm install rollup --force
+
 # Run as non-root user
 USER node
 
@@ -36,4 +42,4 @@ USER node
 EXPOSE 5173
 
 # Run the application.
-CMD ["npm", "run", "dev", "--host"]
+CMD ["pnpm", "run", "dev", "--host"]
