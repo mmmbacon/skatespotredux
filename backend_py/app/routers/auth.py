@@ -84,7 +84,7 @@ async def google_callback(
     }
     app_jwt = jwt.encode(payload, settings.JWT_SECRET, algorithm="HS256")
 
-    frontend_redirect_url = "http://localhost:5174/?token=" + app_jwt
+    frontend_redirect_url = "http://localhost:5173/?token=" + app_jwt
 
     response = RedirectResponse(url=frontend_redirect_url, status_code=status.HTTP_302_FOUND)
     # Store token in an HTTP-only cookie (optional but recommended)
