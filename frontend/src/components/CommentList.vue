@@ -5,8 +5,19 @@
 
   function timeAgo(dateString: string): string {
     const now = new Date();
-    const date = new Date(dateString);
+    // Ensure the date string is interpreted as UTC by appending 'Z' if it doesn't have timezone info
+    const adjustedDateString =
+      dateString.includes('Z') || dateString.includes('+') || dateString.includes('-')
+        ? dateString
+        : dateString + 'Z';
+    const date = new Date(adjustedDateString);
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000); // seconds
+
+    // Handle negative differences (future dates) gracefully
+    if (diff < 0) {
+      return 'just now';
+    }
+
     if (diff < 60) {
       return `${diff} second${diff === 1 ? '' : 's'} ago`;
     } else if (diff < 3600) {

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from pydantic import BaseModel, Field, validator, field_validator
+from pydantic import BaseModel, Field, validator, field_validator, field_serializer
 from typing import Any, Optional, List, TYPE_CHECKING
 from uuid import UUID
 from datetime import datetime
@@ -58,6 +58,18 @@ class Spot(SpotBase):
                 "coordinates": [lon, lat]
             }
         return v
+
+    @field_serializer('created_at')
+    def serialize_created_at(self, dt: datetime) -> str:
+        # Ensure UTC timestamps are serialized with 'Z' suffix for proper timezone handling
+        return dt.isoformat() + 'Z' if dt.tzinfo is None else dt.isoformat()
+
+    @field_serializer('updated_at')
+    def serialize_updated_at(self, dt: Optional[datetime]) -> Optional[str]:
+        if dt is None:
+            return None
+        # Ensure UTC timestamps are serialized with 'Z' suffix for proper timezone handling
+        return dt.isoformat() + 'Z' if dt.tzinfo is None else dt.isoformat()
 
     class Config:
         from_attributes = True
