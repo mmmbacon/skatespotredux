@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-  import { defineProps } from 'vue';
+  // Vue 3 setup script - defineProps is available globally
   import { Icon } from '@iconify/vue';
 
   defineProps<{

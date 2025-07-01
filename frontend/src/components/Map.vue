@@ -32,7 +32,7 @@
         <l-marker
           v-for="spot in spots"
           :key="spot.id + (props.activeSpotId === spot.id ? '-active' : '')"
-          :ref="el => setMarkerRef(el, spot.id)"
+          :ref="(el: any) => setMarkerRef(el, spot.id)"
           :lat-lng="
             [spot.location.coordinates[1], spot.location.coordinates[0]] as [number, number]
           "
@@ -153,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onUnmounted, defineProps, watch, nextTick, computed } from 'vue';
+  import { ref, onMounted, onUnmounted, watch, nextTick, computed } from 'vue';
   import { LMap, LTileLayer, LMarker, LIcon, LPopup, LTooltip } from '@vue-leaflet/vue-leaflet';
   import 'leaflet/dist/leaflet.css';
   import type { PropType } from 'vue';

@@ -139,7 +139,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, defineProps, computed } from 'vue';
+  import { ref, computed } from 'vue';
   import BaseButton from './BaseButton.vue';
   import CommentList from './CommentList.vue';
   import CommentForm from './CommentForm.vue';
