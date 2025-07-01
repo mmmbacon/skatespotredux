@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, watch, defineProps, defineEmits } from 'vue';
+  import { ref, watch, defineProps } from 'vue';
   import type { Spot, SpotCreatePayload, SpotUpdatePayload } from '@/stores/spots';
   import BaseButton from './BaseButton.vue';
 

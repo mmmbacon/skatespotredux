@@ -153,17 +153,7 @@
 </template>
 
 <script setup lang="ts">
-  import {
-    ref,
-    onMounted,
-    onUnmounted,
-    defineProps,
-    defineExpose,
-    defineEmits,
-    watch,
-    nextTick,
-    computed,
-  } from 'vue';
+  import { ref, onMounted, onUnmounted, defineProps, watch, nextTick, computed } from 'vue';
   import { LMap, LTileLayer, LMarker, LIcon, LPopup, LTooltip } from '@vue-leaflet/vue-leaflet';
   import 'leaflet/dist/leaflet.css';
   import type { PropType } from 'vue';

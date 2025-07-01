@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { onMounted, defineEmits, ref, computed } from 'vue';
+  import { onMounted, ref, computed } from 'vue';
   import { useSpotsStore } from '@/stores/spots';
   import type { Spot } from '@/stores/spots';
   import { useAuthStore } from '@/stores/auth';

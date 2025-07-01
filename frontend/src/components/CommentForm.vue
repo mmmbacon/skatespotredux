@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, defineEmits } from 'vue';
+  import { ref } from 'vue';
   import BaseButton from './BaseButton.vue';
   import axios from 'axios';
   import { useAuthStore } from '@/stores/auth';

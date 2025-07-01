@@ -9,7 +9,12 @@ from .database import Base, engine
 app = FastAPI(title="SkateSpot API", version="0.1.0")
 
 # Allow frontend origin during dev
-origins = ["http://localhost:5173", "http://localhost:5174"]
+frontend_port = os.getenv("FRONTEND_PORT", "5173")
+origins = [
+    f"http://localhost:{frontend_port}",
+    "http://localhost:5173",  # fallback
+    "http://localhost:5174",  # fallback
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
