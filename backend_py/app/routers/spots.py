@@ -276,9 +276,17 @@ async def vote_spot(
 
     await db.commit()
 
-    # return updated spot with score
-    updated_spot = await db.get(Spot, spot_id)
-    await db.refresh(updated_spot)
+    # return updated spot with score - eagerly load relationships to avoid serialization issues
+    result = await db.execute(
+        select(Spot)
+        .options(
+            joinedload(Spot.user),
+            joinedload(Spot.comments).joinedload(Comment.user)
+        )
+        .where(Spot.id == spot_id)
+    )
+    updated_spot = result.unique().scalar_one()
+    
     score_result = await db.execute(select(func.coalesce(func.sum(Vote.value), 0)).where(Vote.spot_id == spot_id))
     updated_spot.score = score_result.scalar() or 0
     updated_spot.my_vote = vote.value
@@ -297,7 +305,17 @@ async def remove_vote(
         await db.delete(vote)
         await db.commit()
 
-    updated_spot = await db.get(Spot, spot_id)
+    # return updated spot with score - eagerly load relationships to avoid serialization issues
+    result = await db.execute(
+        select(Spot)
+        .options(
+            joinedload(Spot.user),
+            joinedload(Spot.comments).joinedload(Comment.user)
+        )
+        .where(Spot.id == spot_id)
+    )
+    updated_spot = result.unique().scalar_one()
+    
     score_result = await db.execute(select(func.coalesce(func.sum(Vote.value), 0)).where(Vote.spot_id == spot_id))
     updated_spot.score = score_result.scalar() or 0
     updated_spot.my_vote = None
