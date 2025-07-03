@@ -22,6 +22,8 @@ shapely
 boto3
 
 # For testing
-# pytest
-# httpx
-# pytest-asyncio 
+pytest
+httpx
+pytest-asyncio
+aiosqlite
+pytest-cov 
