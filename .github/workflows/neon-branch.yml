@@ -1,0 +1,158 @@
+name: Create/Delete Branch for Pull Request
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  setup:
+    name: Setup
+    outputs:
+      branch: ${{ steps.branch_name.outputs.current_branch }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get branch name
+        id: branch_name
+        uses: tj-actions/branch-names@v8
+
+  create_neon_branch:
+    name: Create Neon Branch
+    needs: setup
+    if: |
+      github.event_name == 'pull_request' && (
+      github.event.action == 'synchronize'
+      || github.event.action == 'opened'
+      || github.event.action == 'reopened')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Neon Branch
+        id: create_neon_branch
+        uses: neondatabase/create-branch-action@v5
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Comment PR with Database URL
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const body = `## 🚀 Neon Preview Branch Created
+
+            Your preview database is ready!
+
+            **Branch Name:** \`preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}\`
+
+            > ⚠️ This database branch will be automatically deleted when the PR is closed.
+            > 🔒 The connection string is available as output from the workflow for use in deployments.
+
+            ### Using the Preview Database
+
+            The database connection string is available in the workflow outputs:
+            - \`db_url\`: Direct connection string
+            - \`db_url_with_pooler\`: Connection pooling enabled (recommended)
+
+            Use these in your deployment or testing steps by referencing:
+            \`\${{ steps.create_neon_branch.outputs.db_url_with_pooler }}\`
+
+            ---
+            *Powered by [Neon](https://neon.tech) - Serverless Postgres*
+            `;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
+
+  delete_neon_branch:
+    name: Delete Neon Branch
+    needs: setup
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Delete Neon Branch
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Comment PR with Cleanup Confirmation
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const body = `## 🧹 Neon Branch Cleaned Up
+
+            ✅ Database branch \`preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}\` has been deleted.
+
+            All preview database resources associated with this PR have been removed.
+            `;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
+
+  cleanup_fly_app:
+    name: Cleanup Fly.io App
+    needs: setup
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Destroy Fly.io App
+        continue-on-error: true
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          APP_NAME="skatespot-pr-${{ github.event.number }}"
+          
+          if flyctl status -a $APP_NAME 2>/dev/null; then
+            echo "Destroying Fly.io app: $APP_NAME"
+            flyctl apps destroy $APP_NAME -y
+            echo "✅ App destroyed successfully"
+          else
+            echo "ℹ️  App $APP_NAME does not exist, skipping..."
+          fi
+
+      - name: Comment PR with Fly Cleanup
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const body = `## 🚀 Fly.io App Cleaned Up
+
+            ✅ Fly.io app \`skatespot-pr-${{ github.event.number }}\` has been destroyed.
+            `;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });

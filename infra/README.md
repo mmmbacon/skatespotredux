@@ -30,6 +30,11 @@ docker compose down -v
 
 ## Environment files
 
-`env/.env.local` (git-ignored) is injected into **both** postgres and backend.
+`env/.env.local` (git-ignored) is injected into **both** postgres and backend for local development.
 
 > Copy `sample.env` to `env/.env.local` and fill in your Google OAuth creds before first run.
+
+For production deployment with Neon:
+- Use `sample.env.production` as a template
+- Configure with your Neon connection string
+- See [NEON_MIGRATION.md](../docs/NEON_MIGRATION.md) for full setup instructions

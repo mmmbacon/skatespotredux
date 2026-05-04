@@ -64,7 +64,7 @@ Key features:
 | ------------- | -------------------------------------- | ------------------ |
 | Frontend      | Vue 3 + Vite + Pinia + Tailwind/shadcn | `frontend` (Nginx) |
 | API           | FastAPI + SQLAlchemy 2 async           | `backend`          |
-| Database      | PostgreSQL 15 + PostGIS                | `postgres`         |
+| Database      | PostgreSQL 15 + PostGIS                | `postgres` (local) / Neon (production) |
 | Orchestration | Docker Compose (dev)                   | `infra/`           |
 
-> For production we plan to move to Fly .io or Kubernetes.
+> **Production Database**: We use [Neon](https://neon.tech) for serverless Postgres with automatic database branching for PR previews. See [NEON_MIGRATION.md](docs/NEON_MIGRATION.md) for details.
