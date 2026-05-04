@@ -4,83 +4,83 @@ This directory contains automated workflows for the SkateSpot Redux project.
 
 ## Workflows
 
-### 1. PR Open - Create Neon Branch
+### 1. Create/Delete Branch for Pull Request
 
-**File**: `workflows/pr-open.yml`
+**File**: `workflows/neon-branch.yml`
 
-**Trigger**: Pull request opened, reopened, or synchronized
+**Trigger**: Pull request events (opened, reopened, synchronized, closed)
 
-**Purpose**: Automatically creates a preview database for each pull request using Neon's database branching feature.
-
-**What it does**:
-1. Creates a new Neon database branch named `pr-{number}`
-2. The branch is an instant copy of the main production database
-3. Posts a comment on the PR with the connection string
-4. Developers can use this preview database to test changes without affecting production
-
-**Required Secrets**:
-- `NEON_PROJECT_ID`: Your Neon project ID
-- `NEON_API_KEY`: Neon API key with branch management permissions
-
-**Example Comment**:
-```
-## 🚀 Neon Preview Branch Created
-
-Your preview database is ready!
-
-**Branch Name:** `pr-123`
-**Connection String:** `postgresql://user:pass@host.neon.tech/dbname`
-
-> ⚠️ This database branch will be automatically deleted when the PR is closed.
-```
-
-### 2. PR Close - Cleanup Resources
-
-**File**: `workflows/pr-close.yml`
-
-**Trigger**: Pull request closed (merged or not)
-
-**Purpose**: Cleans up all resources associated with a PR to avoid unnecessary costs.
+**Purpose**: Automatically manages preview database branches for each pull request using Neon's database branching feature and the official Neon GitHub Integration.
 
 **What it does**:
-1. **Neon Cleanup**: Deletes the database branch `pr-{number}`
+
+#### On PR Open/Update (opened, reopened, synchronize)
+1. Creates a new Neon database branch named `preview/pr-{number}-{branch-name}`
+2. The branch is an instant copy-on-write snapshot of the main database
+3. Posts a comment on the PR with preview database information
+4. Makes database connection strings available in workflow outputs
+
+#### On PR Close (closed)
+1. **Neon Cleanup**: Deletes the database branch `preview/pr-{number}-{branch-name}`
 2. **Fly.io Cleanup**: Destroys the preview app `skatespot-pr-{number}` (if exists)
 3. Posts confirmation comments on the PR
 
-**Required Secrets**:
-- `NEON_PROJECT_ID`: Your Neon project ID
-- `NEON_API_KEY`: Neon API key with branch management permissions
-- `FLY_API_TOKEN`: Fly.io API token (optional, only if using Fly.io preview apps)
+**Required Configuration**:
+- `NEON_PROJECT_ID` variable (auto-created by Neon GitHub Integration)
+- `NEON_API_KEY` secret (auto-created by Neon GitHub Integration)
+- `FLY_API_TOKEN` secret (optional, only needed if using Fly.io preview apps)
 
 **Jobs**:
 
-#### cleanup-neon-branch
-Always runs. Deletes the Neon database branch associated with the PR.
+#### setup
+Extracts the branch name for use in other jobs.
 
-#### cleanup-fly-app
-Conditionally runs (skipped for main/master branches). Attempts to destroy the Fly.io preview app. Uses `continue-on-error` to gracefully handle non-existent apps.
+#### create_neon_branch
+Creates the preview database branch. Connection strings are available as job outputs:
+- `db_url`: Direct connection string
+- `db_url_with_pooler`: Connection string with pooling (recommended)
+
+#### delete_neon_branch
+Deletes the preview database branch when PR is closed.
+
+#### cleanup_fly_app (Optional)
+Attempts to destroy the Fly.io preview app. Uses `continue-on-error` to gracefully handle non-existent apps.
 
 ## Setup Instructions
 
-### 1. Add Repository Secrets
+### 1. Install the Neon GitHub Integration
+
+The Neon GitHub Integration **automatically** sets up the required secrets and variables:
+
+1. In the Neon Console, navigate to the **Integrations** page in your Neon project
+2. Locate the **GitHub** card and click **Add**
+3. Click **Install GitHub App**
+4. Select your GitHub account and authorize the app
+5. Choose whether to install for **All repositories** or **Only select repositories**
+6. Select this GitHub repository to connect to your Neon project
+7. Click **Connect**
+
+This automatically creates:
+- `NEON_API_KEY` secret in your GitHub repository
+- `NEON_PROJECT_ID` variable in your GitHub repository
+
+### 2. Add Optional Secrets (If Needed)
+
+If using Fly.io preview apps, manually add:
 
 Go to your GitHub repository → Settings → Secrets and variables → Actions
 
-Add the following secrets:
-
 ```
-NEON_PROJECT_ID=your-project-id-here
-NEON_API_KEY=your-api-key-here
-FLY_API_TOKEN=your-fly-token-here  # Optional
+FLY_API_TOKEN=your-fly-token-here
 ```
 
-### 2. Enable GitHub Actions
+### 3. Enable GitHub Actions
 
 Ensure GitHub Actions is enabled for your repository:
 - Settings → Actions → General
 - Allow all actions and reusable workflows
 
-### 3. Configure Workflow Permissions
+### 4. Configure Workflow Permissions
 
 Ensure workflows have permission to comment on PRs:
 - Settings → Actions → General → Workflow permissions

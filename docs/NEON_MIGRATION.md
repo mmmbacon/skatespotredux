@@ -36,25 +36,40 @@ When the PR is closed, another workflow:
 
 ### 1. Prerequisites
 
-You need a Neon account and project. Sign up at [neon.tech](https://neon.tech).
+- Neon account and project. Sign up at [neon.tech](https://neon.tech).
+- GitHub repository for your application
 
-### 2. Get Your Neon Credentials
+### 2. Install the Neon GitHub Integration
 
-From your Neon dashboard:
+The Neon GitHub Integration **automatically** sets up the required secrets and variables:
 
-1. Go to your project settings
-2. Copy the **Project ID**
-3. Generate an **API Key** (Settings → API Keys → Create new API key)
+1. In the Neon Console, navigate to the **Integrations** page in your Neon project
+2. Locate the **GitHub** card and click **Add**
+3. Click **Install GitHub App**
+4. Select your GitHub account and authorize the app
+5. Choose whether to install for **All repositories** or **Only select repositories**
+6. Select the GitHub repository to connect to your Neon project
+7. Click **Connect**
 
-### 3. Configure GitHub Secrets
+This will automatically create:
+- `NEON_API_KEY` secret in your GitHub repository
+- `NEON_PROJECT_ID` variable in your GitHub repository
 
-Add these secrets to your GitHub repository (Settings → Secrets → Actions):
+### 3. Configure Optional Secrets
 
-- `NEON_PROJECT_ID`: Your Neon project ID
-- `NEON_API_KEY`: Your Neon API key
-- `FLY_API_TOKEN`: Your Fly.io API token (optional, if using Fly.io for apps)
+If you're using Fly.io for preview apps, add this secret manually:
 
-### 4. Update Environment Variables
+- `FLY_API_TOKEN`: Your Fly.io API token (Settings → Secrets → Actions)
+
+### 4. Add the GitHub Actions Workflow
+
+Copy the workflow file from this repository (`.github/workflows/neon-branch.yml`) to your repository's `.github/workflows/` directory. The workflow is based on Neon's official template and includes:
+
+- Database branch creation on PR open/reopen/synchronize
+- Automatic database branch deletion on PR close
+- Optional Fly.io app cleanup on PR close
+
+### 5. Update Environment Variables
 
 #### For Local Development
 
@@ -84,7 +99,7 @@ You can get this connection string from:
 - Your Neon dashboard
 - PR comments (for preview branches)
 
-### 5. Migrate Existing Data (One-time)
+### 6. Migrate Existing Data (One-time)
 
 If you're migrating from Fly Postgres:
 
@@ -105,50 +120,93 @@ If you're migrating from Fly Postgres:
    alembic upgrade head
    ```
 
-## Workflows
+## Workflow
 
-### PR Open Workflow
+### Unified Branch Management Workflow
 
-**File**: `.github/workflows/pr-open.yml`
+**File**: `.github/workflows/neon-branch.yml`
 
-**Triggers**: When a PR is opened, reopened, or synchronized
+This is a unified workflow based on Neon's official GitHub Integration template that handles both creation and deletion of preview database branches.
+
+**Triggers**: Pull request events (opened, reopened, synchronized, closed)
+
+**Jobs**:
+
+#### 1. setup
+Extracts the branch name for use in other jobs.
+
+#### 2. create_neon_branch
+**Runs on**: PR opened, reopened, or synchronized
 
 **Actions**:
-1. Creates a Neon branch named `pr-{number}`
-2. Comments on the PR with the database URL
-3. Outputs branch information for debugging
+1. Creates a Neon branch named `preview/pr-{number}-{branch-name}`
+2. The branch is an instant copy-on-write snapshot of the main database
+3. Posts a comment on the PR with information about the preview database
+4. Database connection string is available in workflow outputs (not logged for security)
 
-### PR Close Workflow
+**Outputs**:
+- `db_url`: Direct database connection string
+- `db_url_with_pooler`: Connection string with connection pooling (recommended)
 
-**File**: `.github/workflows/pr-close.yml`
-
-**Triggers**: When a PR is closed (merged or not)
+#### 3. delete_neon_branch
+**Runs on**: PR closed (merged or not)
 
 **Actions**:
-1. Deletes the Neon database branch `pr-{number}`
-2. Attempts to destroy the Fly.io preview app `skatespot-pr-{number}`
-3. Comments on the PR confirming cleanup
+1. Deletes the Neon database branch `preview/pr-{number}-{branch-name}`
+2. Posts confirmation comment on the PR
+
+#### 4. cleanup_fly_app (Optional)
+**Runs on**: PR closed
+
+**Actions**:
+1. Attempts to destroy the Fly.io preview app `skatespot-pr-{number}`
+2. Uses `continue-on-error` to gracefully handle non-existent apps
+3. Posts confirmation comment if successful
+
+**Required Configuration**:
+- `NEON_PROJECT_ID` variable (auto-created by Neon GitHub Integration)
+- `NEON_API_KEY` secret (auto-created by Neon GitHub Integration)
+- `FLY_API_TOKEN` secret (optional, only if using Fly.io preview apps)
 
 ## Using Preview Databases in CI/CD
 
-To use the preview database in your CI/CD pipeline, reference the output from the create-branch action:
+To use the preview database in your CI/CD pipeline, add steps to the `create_neon_branch` job. The database connection string is available in the workflow outputs:
 
 ```yaml
-- name: Create Neon Branch
-  id: create-branch
-  uses: neondatabase/create-branch-action@v5
-  with:
-    project_id: ${{ secrets.NEON_PROJECT_ID }}
-    parent: main
-    branch_name: pr-${{ github.event.pull_request.number }}
-    api_key: ${{ secrets.NEON_API_KEY }}
+create_neon_branch:
+  name: Create Neon Branch
+  needs: setup
+  if: |
+    github.event_name == 'pull_request' && (
+    github.event.action == 'synchronize'
+    || github.event.action == 'opened'
+    || github.event.action == 'reopened')
+  runs-on: ubuntu-latest
+  steps:
+    - name: Create Neon Branch
+      id: create_neon_branch
+      uses: neondatabase/create-branch-action@v5
+      with:
+        project_id: ${{ vars.NEON_PROJECT_ID }}
+        branch_name: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+        api_key: ${{ secrets.NEON_API_KEY }}
 
-- name: Run Tests
-  env:
-    DATABASE_URL: ${{ steps.create-branch.outputs.db_url }}
-  run: |
-    pytest
+    # Add your migration/test steps here
+    - name: Run Migrations
+      env:
+        DATABASE_URL: ${{ steps.create_neon_branch.outputs.db_url_with_pooler }}
+      run: |
+        cd backend_py
+        alembic upgrade head
+
+    - name: Run Tests
+      env:
+        DATABASE_URL: ${{ steps.create_neon_branch.outputs.db_url_with_pooler }}
+      run: |
+        pytest
 ```
+
+**Important**: Connection string outputs are only available within the same job. Add all migration and testing steps to the `create_neon_branch` job.
 
 ## Troubleshooting
 
